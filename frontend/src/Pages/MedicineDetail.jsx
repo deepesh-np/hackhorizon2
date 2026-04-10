@@ -147,73 +147,7 @@ function MedicineDetail() {
                 <span className="text-on-surface font-medium">{medicine.name}</span>
             </nav>
 
-            {comparisonLoading && (
-                <div className="bg-primary/5 border border-primary/20 p-6 rounded-3xl mb-8 flex gap-4 items-center animate-pulse">
-                    <span className="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
-                    <div>
-                        <div className="h-5 bg-primary/20 rounded w-48 mb-2"></div>
-                        <div className="h-4 bg-primary/10 rounded w-96"></div>
-                    </div>
-                </div>
-            )}
 
-            {!comparisonLoading && comparison && (
-                <div className={`mb-8 p-6 rounded-3xl border shadow-sm ${
-                    comparison.recommendation === 'recommended' ? 'bg-primary-container border-primary/30 text-on-primary-container' :
-                    comparison.recommendation === 'not_recommended' ? 'bg-error-container border-error/30 text-on-error-container' :
-                    'bg-surface-variant border-outline/30 text-on-surface-variant'
-                }`}>
-                    <div className="flex items-start gap-4 mb-4">
-                        <span className="material-symbols-outlined text-3xl mt-1">
-                            {comparison.recommendation === 'recommended' ? 'check_circle' :
-                             comparison.recommendation === 'not_recommended' ? 'cancel' : 'info'}
-                        </span>
-                        <div>
-                            <h2 className="text-lg font-bold">AI Comparison Summary</h2>
-                            <p className="text-sm font-body mt-1">{comparison.summary}</p>
-                        </div>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-6 mt-6">
-                        {comparison.reasonsToSwitch?.length > 0 && (
-                            <div className="bg-white/50 p-4 rounded-2xl">
-                                <h3 className="font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-sm">thumb_up</span> Reasons to switch
-                                </h3>
-                                <ul className="list-disc pl-5 text-sm space-y-1">
-                                    {comparison.reasonsToSwitch.map((r, i) => <li key={i}>{r}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                        {comparison.reasonsNotToSwitch?.length > 0 && (
-                            <div className="bg-white/50 p-4 rounded-2xl">
-                                <h3 className="font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-sm text-error">thumb_down</span> Reasons not to switch
-                                </h3>
-                                <ul className="list-disc pl-5 text-sm space-y-1">
-                                    {comparison.reasonsNotToSwitch.map((r, i) => <li key={i}>{r}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-
-                    {comparison.keyDifferences?.length > 0 && (
-                        <div className="mt-6">
-                            <h3 className="font-bold text-sm uppercase tracking-wider mb-2">Key Differences</h3>
-                            <ul className="list-disc pl-5 text-sm space-y-1">
-                                {comparison.keyDifferences.map((d, i) => <li key={i}>{d}</li>)}
-                            </ul>
-                        </div>
-                    )}
-
-                    {comparison.safetyNote && (
-                        <div className="mt-6 bg-error/10 border border-error/20 text-error p-3 rounded-xl flex gap-3 text-sm font-bold items-center">
-                            <span className="material-symbols-outlined">warning</span>
-                            {comparison.safetyNote}
-                        </div>
-                    )}
-                </div>
-            )}
 
             {/* Header Card */}
             <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-[0px_20px_40px_rgba(11,28,48,0.04)] relative overflow-hidden mb-8">
@@ -299,6 +233,69 @@ function MedicineDetail() {
                         </div>
                     )}
                 </section>
+            )}
+
+            {comparisonLoading && (
+                <div className="bg-white border border-outline-variant/30 p-4 rounded-2xl mb-8 flex gap-4 items-center animate-pulse shadow-sm">
+                    <span className="material-symbols-outlined text-primary text-2xl">auto_awesome</span>
+                    <div>
+                        <div className="h-4 bg-primary/20 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-primary/10 rounded w-64"></div>
+                    </div>
+                </div>
+            )}
+
+            {!comparisonLoading && comparison && (
+                <div className="mb-8 p-5 rounded-2xl border border-outline-variant/30 shadow-[0_2px_10px_rgba(0,0,0,0.02)] bg-surface-container-lowest text-on-surface">
+                    <div className="flex items-start gap-3 mb-3">
+                        <span className="material-symbols-outlined text-2xl text-primary mt-0.5">info</span>
+                        <div>
+                            <h2 className="text-base font-bold">Factual Comparison</h2>
+                            <p className="text-xs font-body text-secondary mt-0.5">{comparison.summary}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                        {comparison.originalComposition && (
+                            <div className="bg-surface p-3 rounded-xl border border-outline-variant/20">
+                                <h3 className="font-bold text-[10px] uppercase tracking-wider mb-1 text-on-surface-variant">Original Composition</h3>
+                                <p className="text-xs leading-relaxed text-secondary">{comparison.originalComposition}</p>
+                            </div>
+                        )}
+                        {comparison.alternativeComposition && (
+                            <div className="bg-surface p-3 rounded-xl border border-outline-variant/20">
+                                <h3 className="font-bold text-[10px] uppercase tracking-wider mb-1 text-on-surface-variant">Alternative Composition</h3>
+                                <p className="text-xs leading-relaxed text-secondary">{comparison.alternativeComposition}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {comparison.facts?.length > 0 && (
+                        <div className="mt-4">
+                            <h3 className="font-bold text-[10px] uppercase tracking-wider mb-1 text-on-surface-variant">Key Facts</h3>
+                            <ul className="list-disc pl-4 text-xs space-y-1 text-secondary">
+                                {comparison.facts.map((f, i) => <li key={i}>{f}</li>)}
+                            </ul>
+                        </div>
+                    )}
+
+                    {(comparison.originalGovLink || comparison.alternativeGovLink) && (
+                        <div className="mt-4 flex flex-col md:flex-row gap-3">
+                            {comparison.originalGovLink && (
+                                <a href={comparison.originalGovLink} target="_blank" rel="noopener noreferrer" className="flex-1 bg-surface-container-low border border-primary/10 text-primary p-2 rounded-lg flex gap-2 text-xs font-bold items-center hover:bg-primary/5 transition-colors">
+                                    <span className="material-symbols-outlined text-sm">link</span>
+                                    <span>Original Medical Description</span>
+                                </a>
+                            )}
+                            {comparison.alternativeGovLink && (
+                                <a href={comparison.alternativeGovLink} target="_blank" rel="noopener noreferrer" className="flex-1 bg-surface-container-low border border-primary/10 text-primary p-2 rounded-lg flex gap-2 text-xs font-bold items-center hover:bg-primary/5 transition-colors">
+                                    <span className="material-symbols-outlined text-sm">link</span>
+                                    <span>Alternative Medical Description</span>
+                                </a>
+                            )}
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Tabs */}
