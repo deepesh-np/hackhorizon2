@@ -87,7 +87,7 @@ const register = async (req, res) => {
     sendTokenResponse(user, 201, res, message);
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({ success: false, message: "Server error during registration." });
+    res.status(500).json({ success: false, message: error });
   }
 };
 
