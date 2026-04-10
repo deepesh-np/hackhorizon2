@@ -54,6 +54,8 @@ const searchMedicines = async (req, res) => {
 
         return {
           ...med.toObject(),
+          isCurrentlyAvailable: !!cheapestInventory,
+          availabilityStatus: cheapestInventory ? "available" : "currently not available",
           lowestPrice: cheapestInventory?.price || med.averagePrice || null,
           mrp: cheapestInventory?.mrp || null,
           discount: cheapestInventory?.discount || 0,
@@ -146,8 +148,7 @@ const getAlternatives = async (req, res) => {
       ],
     })
       .select("name genericName brand manufacturer dosageForm averagePrice isBranded packSize regulatoryApproval activeIngredients")
-      .sort({ isBranded: 1, averagePrice: 1 }) // generics first, then by price
-      .limit(20);
+      .sort({ isBranded: 1, averagePrice: 1 }); // generics first, then by price
 
     // Enrich with actual lowest price from inventory
     const enriched = await Promise.all(
@@ -160,6 +161,8 @@ const getAlternatives = async (req, res) => {
           .select("price mrp discount");
 
         const altObj = alt.toObject();
+        altObj.isCurrentlyAvailable = !!cheapest;
+        altObj.availabilityStatus = cheapest ? "available" : "currently not available";
         altObj.lowestPrice = cheapest?.price || alt.averagePrice || null;
         altObj.mrp = cheapest?.mrp || null;
         altObj.discount = cheapest?.discount || 0;
