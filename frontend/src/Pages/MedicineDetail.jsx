@@ -214,14 +214,28 @@ function MedicineDetail() {
                             </>
                         )}
 
-                        {priceComparison?.cheapest ? (
-                            <button 
-                                onClick={() => handleAddToCart(medicine._id, priceComparison.cheapest.vendorId)} 
-                                className="mt-4 w-full bg-gradient-to-r from-primary to-indigo-500 text-white font-black px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:-translate-y-1 transition-all duration-300 text-sm flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
-                                Add Cheapest to Cart
-                            </button>
+                        {priceComparison?.vendors?.length > 0 ? (
+                            <div className="mt-5 flex flex-col gap-2 max-h-[170px] overflow-y-auto pr-1 text-left">
+                                <div className="text-[10px] uppercase font-bold text-on-surface-variant flex justify-between items-center px-1 mb-1">
+                                    <span>Select Pharmacy</span>
+                                    <span>Price</span>
+                                </div>
+                                {priceComparison.vendors.map((v, i) => (
+                                    <div key={v.vendorId} className="flex justify-between items-center p-2.5 rounded-xl bg-surface shadow-sm border border-outline-variant/50 hover:border-primary/50 transition-colors group">
+                                        <div className="flex flex-col flex-1 min-w-0 pr-2">
+                                            <span className="text-xs font-bold text-on-surface leading-tight truncate" title={v.vendorName}>{v.vendorName || "Verified Pharmacy"}</span>
+                                            <span className="text-xs text-primary font-black mt-0.5">₹{v.price}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleAddToCart(medicine._id, v.vendorId)}
+                                            className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center shrink-0"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px] mr-1">add_shopping_cart</span>
+                                            Add
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <button 
                                 disabled
@@ -327,30 +341,32 @@ function MedicineDetail() {
                     )}
                     
                     {/* Add to Cart directly inside the Comparison banner */}
-                    <div className="mt-6 pt-4 border-t border-outline-variant/20 flex justify-between items-center bg-surface-container-low p-4 rounded-xl">
+                    <div className="mt-6 pt-4 border-t border-outline-variant/20 flex flex-col gap-3 bg-surface-container-low p-4 rounded-xl">
                         <div>
                             <p className="text-sm font-bold text-on-surface">Ready to switch to this alternative?</p>
-                            {priceComparison?.cheapest ? (
-                                <p className="text-xs text-secondary mt-0.5">Available for ₹{priceComparison.cheapest.price}</p>
-                            ) : (
-                                <p className="text-xs text-error mt-0.5 font-bold">Currently no vendors in stock</p>
-                            )}
+                            <p className="text-xs text-secondary mt-0.5">Select a pharmacy below to add it directly to your cart.</p>
                         </div>
-                        {priceComparison?.cheapest ? (
-                            <button 
-                                onClick={() => handleAddToCart(medicine._id, priceComparison.cheapest.vendorId)} 
-                                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-6 py-2.5 rounded-xl shadow-[0_4px_15px_rgba(20,184,166,0.3)] hover:shadow-[0_6px_20px_rgba(20,184,166,0.5)] hover:-translate-y-1 transition-all duration-300 text-sm flex items-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                                Add to Cart
-                            </button>
+                        
+                        {priceComparison?.vendors?.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                                {priceComparison.vendors.slice(0,3).map((v) => (
+                                    <button 
+                                        key={v.vendorId}
+                                        onClick={() => handleAddToCart(medicine._id, v.vendorId)} 
+                                        className="bg-surface border border-emerald-500/30 text-emerald-700 hover:bg-emerald-500 hover:text-white font-bold px-4 py-2 rounded-xl shadow-sm hover:-translate-y-0.5 transition-all duration-300 text-xs flex items-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">add_shopping_cart</span>
+                                        {v.vendorName || "Verified"} - ₹{v.price}
+                                    </button>
+                                ))}
+                            </div>
                         ) : (
                             <button 
                                 disabled
-                                className="bg-surface-container-high text-on-surface-variant font-black px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 opacity-60 cursor-not-allowed"
+                                className="bg-surface-container-high w-fit text-on-surface-variant font-black px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 opacity-60 cursor-not-allowed"
                             >
                                 <span className="material-symbols-outlined text-[18px]">block</span>
-                                Unavailable
+                                Currently Unavailable
                             </button>
                         )}
                     </div>
