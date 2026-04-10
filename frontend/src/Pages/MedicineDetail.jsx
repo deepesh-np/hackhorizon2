@@ -277,6 +277,9 @@ function MedicineDetail() {
                                                 {alt.savings > 0 && (
                                                     <div className="text-xs text-primary font-bold mt-1">Save ₹{alt.savings} ({alt.savingsPercent}%)</div>
                                                 )}
+                                                {!alt.isCurrentlyAvailable && (
+                                                    <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
+                                                )}
                                             </div>
                                             <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">Generic</span>
                                         </div>
@@ -297,7 +300,12 @@ function MedicineDetail() {
                                         <div className="font-bold text-on-surface group-hover:text-primary transition-colors mb-1">{alt.name}</div>
                                         <div className="text-secondary text-sm mb-3">{alt.manufacturer}</div>
                                         <div className="flex justify-between items-end">
-                                            <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
+                                            <div>
+                                                <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
+                                                {!alt.isCurrentlyAvailable && (
+                                                    <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
+                                                )}
+                                            </div>
                                             <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-1 rounded font-bold">Branded</span>
                                         </div>
                                     </Link>
