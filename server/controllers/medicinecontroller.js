@@ -756,22 +756,23 @@ const compareMedicines = async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are an Indian pharmaceutical expert. Compare two medicines and explain why a patient might switch from one to the other.
+          content: `You are a factual pharmaceutical expert. Compare two medicines by stating ONLY short facts and proper chemical compositions. Provide valid individual government links for both medicines.
 
 Return ONLY valid JSON:
 {
-  "recommendation": "recommended" | "neutral" | "not_recommended",
-  "summary": "One line summary of the comparison",
-  "reasonsToSwitch": ["reason 1", "reason 2", ...],
-  "reasonsNotToSwitch": ["reason 1", "reason 2", ...],
-  "keyDifferences": ["difference 1", "difference 2", ...],
-  "safetyNote": "Important safety information about switching"
+  "summary": "Short factual summary",
+  "originalComposition": "Chemical composition of the first",
+  "alternativeComposition": "Chemical composition of the second",
+  "facts": ["Short Fact 1", "Short Fact 2"],
+  "originalGovLink": "A reliable .gov link (like MedlinePlus or PubChem) for the first medicine",
+  "alternativeGovLink": "A reliable .gov link for the second medicine"
 }
 
 Rules:
-- Be specific and medically accurate
-- Mention price differences if relevant
-- Always include a safety note about consulting a doctor
+- Keep facts very brief (1 sentence max each).
+- State proper chemical compositions accurately.
+- Do not provide advice. Just state facts.
+- Provide two valid government links.
 - Do NOT include any text outside the JSON`,
         },
         {
