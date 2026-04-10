@@ -37,6 +37,17 @@ const orderSchema = new mongoose.Schema(
             state: String,
             pincode: String,
         },
+        paymentStatus: {
+            type: String,
+            enum: ["Pending", "Paid", "Failed"],
+            default: "Pending",
+        },
+        razorpayOrderId: {
+            type: String,
+        },
+        razorpayPaymentId: {
+            type: String,
+        },
     },
     { timestamps: true }
 );

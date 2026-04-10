@@ -15,6 +15,7 @@ import MedicineDetail from './Pages/MedicineDetail'
 import Prescriptions from './Pages/Prescriptions'
 import Profile from './Pages/Profile'
 import AdminDashboard from './Pages/Admin/AdminDashboard'
+import Cart from './Pages/Cart'
 
 // Vendor
 import { VendorDashboard } from './vendor/pages'
@@ -34,6 +35,7 @@ function App() {
               <Route path="prescriptions" element={<Prescriptions />} />
               <Route path="profile" element={<Profile />} />
               <Route path="admin" element={<AdminDashboard />} />
+              <Route path="cart" element={<Cart />} />
             </Route>
             {/* Vendor dashboard uses its own full-screen layout (no Navbar/Footer) */}
             <Route path="/vendor" element={<VendorDashboard />} />

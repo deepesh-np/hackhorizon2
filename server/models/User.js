@@ -58,6 +58,26 @@ const userSchema = new mongoose.Schema(
         searchedAt: { type: Date, default: Date.now },
       },
     ],
+    cart: [
+      {
+        medicine: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Medicine",
+          required: true,
+        },
+        vendor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+          min: 1,
+        },
+      },
+    ],
     // Vendor-specific fields
     vendorDetails: {
       pharmacyName: { type: String },

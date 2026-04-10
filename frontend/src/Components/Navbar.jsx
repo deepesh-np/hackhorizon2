@@ -56,7 +56,8 @@ function Navbar() {
             <>
               {[
                 { path: "/home", label: "Intelligence Hub", icon: "dashboard_customize" },
-                { path: "/prescriptions", label: "Clinical Logs", icon: "assignment_late" }
+                { path: "/prescriptions", label: "Clinical Logs", icon: "assignment_late" },
+                { path: "/cart", label: "Cart", icon: "shopping_cart" }
               ].map((item, i) => (
                 <Link key={i} to={item.path} className={linkClass(item.path)}>
                   <span className="material-symbols-outlined text-[18px] mr-2">{item.icon}</span>
@@ -161,6 +162,9 @@ function Navbar() {
                 </Link>
                 <Link to="/prescriptions" className="flex items-center p-4 rounded-xl font-bold text-on-background hover:bg-surface-container" onClick={() => setMenuOpen(false)}>
                   <span className="material-symbols-outlined mr-3">assignment_late</span> Clinical Logs
+                </Link>
+                <Link to="/cart" className="flex items-center p-4 rounded-xl font-bold text-on-background hover:bg-surface-container" onClick={() => setMenuOpen(false)}>
+                  <span className="material-symbols-outlined mr-3">shopping_cart</span> Cart
                 </Link>
                 <button
                   onClick={() => {

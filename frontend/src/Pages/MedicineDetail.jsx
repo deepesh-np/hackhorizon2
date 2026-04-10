@@ -35,6 +35,18 @@ function MedicineDetail() {
         }
     }, [id, compareFrom]);
 
+    const handleAddToCart = async (medicineId, vendorId) => {
+        try {
+            const res = await api.post('/cart', { medicineId, vendorId, quantity: 1 });
+            if(res.data.success) {
+                alert('Added to Cart!');
+            }
+        } catch(error) {
+            console.error('Failed to add to cart', error);
+            alert('Could not add to cart. Please log in.');
+        }
+    };
+
     const fetchComparison = async (fromId, toId) => {
         setComparisonLoading(true);
         try {
@@ -201,6 +213,24 @@ function MedicineDetail() {
                                 <div className="text-secondary text-sm">Average price</div>
                             </>
                         )}
+
+                        {priceComparison?.cheapest ? (
+                            <button 
+                                onClick={() => handleAddToCart(medicine._id, priceComparison.cheapest.vendorId)} 
+                                className="mt-4 w-full bg-gradient-to-r from-primary to-indigo-500 text-white font-black px-4 py-3 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] hover:-translate-y-1 transition-all duration-300 text-sm flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
+                                Add Cheapest to Cart
+                            </button>
+                        ) : (
+                            <button 
+                                disabled
+                                className="mt-4 w-full bg-surface-container-high text-on-surface-variant font-bold px-4 py-3 rounded-xl text-sm flex items-center justify-center gap-2 opacity-70 cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">remove_shopping_cart</span>
+                                Out of Stock
+                            </button>
+                        )}
                     </div>
                 </div>
             </section>
@@ -295,6 +325,35 @@ function MedicineDetail() {
                             )}
                         </div>
                     )}
+                    
+                    {/* Add to Cart directly inside the Comparison banner */}
+                    <div className="mt-6 pt-4 border-t border-outline-variant/20 flex justify-between items-center bg-surface-container-low p-4 rounded-xl">
+                        <div>
+                            <p className="text-sm font-bold text-on-surface">Ready to switch to this alternative?</p>
+                            {priceComparison?.cheapest ? (
+                                <p className="text-xs text-secondary mt-0.5">Available for ₹{priceComparison.cheapest.price}</p>
+                            ) : (
+                                <p className="text-xs text-error mt-0.5 font-bold">Currently no vendors in stock</p>
+                            )}
+                        </div>
+                        {priceComparison?.cheapest ? (
+                            <button 
+                                onClick={() => handleAddToCart(medicine._id, priceComparison.cheapest.vendorId)} 
+                                className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-6 py-2.5 rounded-xl shadow-[0_4px_15px_rgba(20,184,166,0.3)] hover:shadow-[0_6px_20px_rgba(20,184,166,0.5)] hover:-translate-y-1 transition-all duration-300 text-sm flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                                Add to Cart
+                            </button>
+                        ) : (
+                            <button 
+                                disabled
+                                className="bg-surface-container-high text-on-surface-variant font-black px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 opacity-60 cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">block</span>
+                                Unavailable
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -429,6 +488,7 @@ function MedicineDetail() {
                                         <th className="p-4 font-bold text-on-surface-variant text-xs uppercase tracking-wider">MRP</th>
                                         <th className="p-4 font-bold text-on-surface-variant text-xs uppercase tracking-wider">Discount</th>
                                         <th className="p-4 font-bold text-on-surface-variant text-xs uppercase tracking-wider">Stock</th>
+                                        <th className="p-4 font-bold text-on-surface-variant text-xs uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -446,6 +506,9 @@ function MedicineDetail() {
                                                 ) : '-'}
                                             </td>
                                             <td className="p-4 text-sm text-on-surface">{v.stock || 'Available'}</td>
+                                            <td className="p-4">
+                                                <button onClick={() => handleAddToCart(medicine._id, v.vendorId)} className="bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-bold shadow hover:shadow-md transition">Add to Cart</button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -475,6 +538,9 @@ function MedicineDetail() {
                                         <div className="mt-3 flex justify-between items-center">
                                             <div className="text-primary font-bold text-lg">₹{ph.price || '--'}</div>
                                             <span className="text-xs text-secondary">Stock: {ph.stock || 'Unknown'}</span>
+                                        </div>
+                                        <div className="mt-4 border-t border-outline-variant/20 pt-4">
+                                            <button onClick={() => handleAddToCart(medicine._id, ph.vendorId)} className="w-full bg-primary text-on-primary font-bold px-4 py-2 rounded-xl shadow-sm hover:translate-y-[-2px] transition-all text-sm">Add to Cart</button>
                                         </div>
                                     </div>
                                 ))}
