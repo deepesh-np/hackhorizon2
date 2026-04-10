@@ -249,7 +249,6 @@ function MedicineDetail() {
                 </div>
             </section>
 
-            {/* Description / Side Effects / Warnings */}
             {(medicine.description || medicine.sideEffects?.length > 0 || medicine.warnings?.length > 0) && (
                 <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm mb-8">
                     {medicine.description && (

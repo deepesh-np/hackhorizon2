@@ -10,7 +10,6 @@ function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // High-contrast, user-friendly colors that match Home.jsx
   const textColor = "text-on-surface-variant";
   const activeColor = "text-primary";
   const hoverColor = "hover:text-primary";
@@ -21,7 +20,6 @@ function Navbar() {
       : `${textColor} ${hoverColor} hover:bg-surface-container`
     }`;
 
-  // Animation variants
   const navAnimation = {
     hidden: { y: -80, opacity: 0 },
     show: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }
@@ -97,7 +95,6 @@ function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-2 pl-4 border-l border-outline/50">
-              {/* Profile Shortcut */}
               <Link
                 to="/profile"
                 className="flex items-center gap-3 p-1 pr-4 rounded-xl hover:bg-surface-container-high transition-all"
@@ -113,7 +110,6 @@ function Navbar() {
                 </div>
               </Link>
 
-              {/* Logout button */}
               <button
                 onClick={logout}
                 className="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
@@ -133,7 +129,6 @@ function Navbar() {
             </div>
           )}
 
-          {/* MOBILE MENU BUTTON */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container text-on-background hover:bg-outline transition-colors"

@@ -8,15 +8,12 @@ function Home() {
     const { user, loading, logout } = useAuth();
     const navigate = useNavigate();
 
-    // Patient Search State
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    // Vendor Inventory State
     const [inventory, setInventory] = useState([]);
 
-    // Vendor Add/Edit Modal State
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [modalForm, setModalForm] = useState({ medicineId: '', price: '', mrp: '', discount: '', stock: '', expiryDate: '', batchNumber: '' });
@@ -51,7 +48,7 @@ function Home() {
         const query = directQuery || searchQuery;
         if (!query.trim()) return;
 
-        if (directQuery) setSearchQuery(directQuery); // update input field visually
+        if (directQuery) setSearchQuery(directQuery);
 
         setIsSearching(true);
         try {
