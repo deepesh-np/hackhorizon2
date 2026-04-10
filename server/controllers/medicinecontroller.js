@@ -806,6 +806,44 @@ Rules:
   }
 };
 
+// ─── @route   POST /api/medicines/chat ──────────────────────────────────────
+// @desc    General AI chatbot for medicine queries
+// @access  Public
+const chatMedicine = async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message || message.trim().length < 2) {
+      return res.status(400).json({ success: false, message: "Please provide a valid question." });
+    }
+
+    const sysPrompt = `You are a helpful, professional AI Pharmacist stationed in India. 
+The user is asking you a question about healthcare or medicines.
+If they ask about a specific medicine, provide:
+1. A very brief description of what it is and its primary use case.
+2. The approximate retail price range in India in metric INR (₹).
+Keep your entire response strictly under 50 words. Do not provide dangerous medical advice; tell them to consult a doctor for severe issues. Format cleanly and kindly.`;
+
+    const chatCompletion = await callGroqWithFallback(
+      {
+        messages: [
+          { role: "system", content: sysPrompt },
+          { role: "user", content: message }
+        ],
+        temperature: 0.3,
+      },
+      textModels
+    );
+
+    const reply = chatCompletion?.choices?.[0]?.message?.content || "I'm sorry, I cannot look up that information right now. Please consult a doctor.";
+
+    res.status(200).json({ success: true, reply });
+  } catch (error) {
+    console.error("ChatMedicine error:", error);
+    res.status(500).json({ success: false, message: "AI Chat unavailable at the moment." });
+  }
+};
+
 module.exports = {
   searchMedicines,
   getMedicineById,
@@ -817,4 +855,5 @@ module.exports = {
   updateMedicine,
   deleteMedicine,
   compareMedicines,
+  chatMedicine,
 };
