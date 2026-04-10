@@ -165,67 +165,99 @@ function Home() {
     if (!user) return null;
 
     return (
-        <div className="min-h-[calc(100vh-72px)] bg-surface p-4 md:p-8 pt-24 max-w-7xl mx-auto">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-                <div>
-                    <h1 className="text-4xl font-headline font-bold text-on-surface tracking-tight flex items-center gap-3">
-                        Welcome, {user.name.split(' ')[0]}
-                        <span className="text-sm px-3 py-1 bg-primary-container text-on-primary-container rounded-full font-label font-bold tracking-widest uppercase">
-                            {user.role}
-                        </span>
-                    </h1>
-                    <p className="text-secondary font-body mt-2 text-lg">
-                        {user.role === 'vendor' ? 'Manage your pharmacy inventory & insights' : 'Compare medicines & upload prescriptions seamlessly'}
-                    </p>
-                </div>
-                <button
-                    onClick={logout}
-                    className="px-8 py-3 bg-white border border-error/30 text-error rounded-full font-bold shadow-sm hover:bg-error/5 hover:border-error transition-all duration-300 font-body text-sm"
-                >
-                    Sign Out
-                </button>
-            </header>
+        <div className="min-h-screen bg-background pt-28 pb-20 relative overflow-hidden">
+            {/* High-Visibility Branded Background */}
+            <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background z-10"></div>
+                <img src="/vitality-bg.png" alt="" className="w-full h-full object-cover" />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6 md:px-8 relative z-20">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-6">
+                    <div>
+                        <h1 className="text-5xl font-black text-on-background tracking-tighter flex items-center gap-4">
+                            Welcome, {user.name.split(' ')[0]}
+                            <span className="text-xs px-3 py-1 bg-primary/10 text-primary rounded-full font-bold tracking-widest uppercase border border-primary/20">
+                                {user.role}
+                            </span>
+                        </h1>
+                        <p className="text-on-surface-variant font-medium mt-3 text-lg max-w-2xl">
+                            {user.role === 'vendor' ? 'Optimize your pharmacy operations with real-time intelligence.' : 'Discover clinically-mapped alternatives and save on healthcare.'}
+                        </p>
+                        {user.role !== 'vendor' && (
+                            <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/10 rounded-2xl shadow-sm">
+                                <span className="material-symbols-outlined text-primary text-sm">verified</span>
+                                <p className="text-sm font-black text-primary italic tracking-tight italic">
+                                    "Same active salt, different brand name; the healing power stays exactly the same."
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </header>
 
             {user.role === 'user' || user.role === 'admin' ? (
                 <main className="space-y-12">
                     {/* Patient / Admin View */}
-                    <section className="bg-gradient-to-br from-surface-container-highest to-surface p-8 rounded-3xl shadow-[0px_20px_40px_rgba(11,28,48,0.06)] border border-white relative overflow-hidden">
-                        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+                    <section className="relative overflow-hidden">
+                        <div className="max-w-4xl">
+                            <h2 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-4">Intelligence Engine</h2>
+                            <h3 className="text-4xl font-black text-on-background tracking-tighter mb-8">What are you searching for today?</h3>
 
-                        <div className="relative z-10 max-w-3xl">
-                            <h2 className="text-3xl font-headline font-bold text-on-surface mb-6">Medical Search Engine</h2>
-
-                            <form onSubmit={(e) => handleSearch(e)} className="flex flex-col sm:flex-row gap-4 relative">
+                            <form onSubmit={(e) => handleSearch(e)} className="relative group">
+                                <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+                                    <span className="material-symbols-outlined text-2xl">search</span>
+                                </div>
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search for Paracetamol, Dolo 650..."
-                                    className="flex-1 px-8 py-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white shadow-sm focus:outline-none focus:ring-4 focus:ring-primary/20 text-lg font-body text-on-surface transition-all placeholder:text-outline"
+                                    placeholder="Search medicine brand or generic name..."
+                                    className="w-full pl-16 pr-40 py-6 rounded-3xl bg-white border border-outline shadow-xl shadow-on-background/5 focus:outline-none focus:ring-4 focus:ring-primary/10 text-xl font-body text-on-background transition-all placeholder:text-on-surface-variant/50"
                                 />
                                 <button
                                     type="submit"
                                     disabled={isSearching}
-                                    className="px-10 py-5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-bold hover:shadow-[0_10px_30px_rgba(34,197,94,0.3)] hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 text-lg"
+                                    className="absolute right-3 top-3 bottom-3 px-8 bg-primary text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-50"
                                 >
-                                    {isSearching ? 'Searching...' : 'Search'}
+                                    {isSearching ? 'Processing...' : 'Search'}
                                 </button>
                             </form>
 
-                            <div className="mt-5 flex flex-wrap items-center gap-3">
-                                <span className="text-sm font-bold text-on-surface-variant flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">trending_up</span> Frequently Searched:
+                            <div className="mt-8 flex flex-wrap items-center gap-3">
+                                <span className="text-xs font-black text-on-surface-variant uppercase tracking-widest flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm">trending_up</span> Trends:
                                 </span>
-                                {['Paracetamol', 'Amoxicillin', 'Azithromycin', 'Crocin', 'Pantoprazole'].map((med) => (
+                                {['Paracetamol', 'Dolo 650', 'Amoxicillin', 'Azithromycin'].map((med) => (
                                     <button
                                         key={med}
                                         type="button"
                                         onClick={() => handleSearch(null, med)}
-                                        className="px-4 py-1.5 bg-white/60 backdrop-blur-md border border-outline-variant/30 rounded-full text-sm font-bold text-slate-700 hover:bg-white hover:text-primary hover:border-primary/50 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:-translate-y-0.5"
+                                        className="px-5 py-2 bg-surface-container border border-outline rounded-xl text-sm font-bold text-on-surface hover:bg-white hover:border-primary/50 hover:text-primary transition-all shadow-sm"
                                     >
                                         {med}
                                     </button>
                                 ))}
+                            </div>
+
+                            {/* Home UI Enrichment: Quick Actions */}
+                            <div className="mt-20">
+                                <h3 className="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">Expert Services</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {[
+                                        { title: 'Interaction Checker', desc: 'Scan drug safety profiles', icon: 'shield_lock', color: 'bg-emerald-500' },
+                                        { title: 'Cheap Alternatives', desc: 'Save up to 70% on meds', icon: 'savings', color: 'bg-blue-500' },
+                                        { title: 'Pharmacy Locator', desc: 'Find certified vendors', icon: 'location_on', color: 'bg-orange-500' },
+                                        { title: 'Clinical Analytics', desc: 'Market pricing trends', icon: 'monitoring', color: 'bg-purple-500' }
+                                    ].map((action, i) => (
+                                        <div key={i} className="card-premium p-6 group hover:border-primary/30 transition-all cursor-pointer">
+                                            <div className={`${action.color} w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-${action.color.split('-')[1]}-500/20 group-hover:scale-110 transition-transform`}>
+                                                <span className="material-symbols-outlined">{action.icon}</span>
+                                            </div>
+                                            <h4 className="text-lg font-black text-on-background mb-2">{action.title}</h4>
+                                            <p className="text-sm text-on-surface-variant leading-relaxed">{action.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -236,33 +268,83 @@ function Home() {
                         )}
 
                         {searchResults.length > 0 && (
-                            <div className="mt-10 relative z-10">
-                                <h3 className="font-headline font-bold text-xl text-on-surface mb-6">Top Results ({searchResults.length})</h3>
-                                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="mt-20">
+                                <div className="flex justify-between items-end mb-10">
+                                    <h3 className="text-2xl font-black text-on-background tracking-tight">Intelligence Results ({searchResults.length})</h3>
+                                    <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Pricing Updated 2m ago</p>
+                                </div>
+                                <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                                     {searchResults.map(med => (
-                                        <Link to={`/medicine/${med._id}`} key={med._id} className="bg-white p-6 rounded-2xl border border-outline-variant/30 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary group-hover:w-2 transition-all"></div>
-                                            <div className="flex justify-between items-start mb-3 pl-3">
-                                                <h3 className="font-bold text-xl font-headline text-on-surface leading-tight break-words pr-2">{med.name}</h3>
-                                                {med.isBranded && (
-                                                    <span className="text-[10px] uppercase font-bold bg-secondary-container text-on-secondary-container px-2 py-1 rounded border border-outline-variant/50 flex-shrink-0">Branded</span>
-                                                )}
+                                        <Link to={`/medicine/${med._id}`} key={med._id} className="card-premium p-8 group relative flex flex-col">
+                                            <div className="absolute top-6 right-6 p-2 rounded-xl bg-surface group-hover:bg-primary/10 transition-colors">
+                                                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">arrow_outward</span>
                                             </div>
-                                            <div className="pl-3 mb-6">
-                                                <p className="text-secondary text-sm font-medium mb-1 line-clamp-1">{med.genericName}</p>
-                                                <p className="text-outline text-xs">Mfr: {med.manufacturer}</p>
-                                            </div>
-                                            <div className="pl-3 flex justify-between items-end mt-auto">
-                                                <div>
-                                                    <div className="text-xs text-secondary mb-1">Lowest Price</div>
-                                                    <div className="text-primary font-bold text-2xl">₹{med.lowestPrice || med.averagePrice || '--'}</div>
+                                            
+                                            <div className="mb-6">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    {med.isBranded && (
+                                                        <span className="text-[10px] font-black uppercase tracking-wider bg-on-background text-white px-2 py-0.5 rounded">Branded</span>
+                                                    )}
+                                                    <span className="text-[10px] font-black uppercase tracking-wider bg-surface-container text-on-surface-variant px-2 py-0.5 rounded border border-outline">
+                                                        {med.dosageForm || 'Generic'}
+                                                    </span>
                                                 </div>
-                                                <span className="text-xs bg-surface-container text-on-surface-variant font-bold px-3 py-1.5 rounded-lg border border-outline-variant/20 shadow-sm">
-                                                    {med.dosageForm || 'N/A'}
-                                                </span>
+                                                <h3 className="text-2xl font-black text-on-background tracking-tight group-hover:text-primary transition-colors">{med.name}</h3>
+                                                <p className="text-on-surface-variant text-sm font-medium mt-1 uppercase tracking-wide">{med.genericName}</p>
+                                            </div>
+
+                                            <div className="mt-auto pt-8 border-t border-outline/50 flex justify-between items-end">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">Market Avg</p>
+                                                    <div className="text-3xl font-black text-primary tracking-tighter">₹{med.lowestPrice || med.averagePrice || '--'}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-1">Manufacturer</p>
+                                                    <p className="text-xs font-bold text-on-surface line-clamp-1">{med.manufacturer}</p>
+                                                </div>
                                             </div>
                                         </Link>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {searchResults.length === 0 && !isSearching && searchQuery.length === 0 && (
+                            <div className="mt-28">
+                                <div className="flex justify-between items-center mb-10">
+                                    <h3 className="text-2xl font-black text-on-background tracking-tighter">Clinical Categories</h3>
+                                    <button className="text-sm font-bold text-primary hover:underline">View Intelligence Network</button>
+                                </div>
+                                <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide no-scrollbar">
+                                    {[
+                                        { name: 'Cardiology', icon: 'cardiology', count: 124 },
+                                        { name: 'Antibiotics', icon: 'pill', count: 86 },
+                                        { name: 'Gastric Care', icon: 'stomach', count: 42 },
+                                        { name: 'Vitamins', icon: 'medication', count: 95 },
+                                        { name: 'Pain Relief', icon: 'psychology', count: 110 },
+                                        { name: 'Dermatology', icon: 'vaccines', count: 70 }
+                                    ].map((cat, i) => (
+                                        <div key={i} className="flex-shrink-0 w-44 card-premium p-6 text-center group cursor-pointer hover:bg-primary hover:text-white transition-all">
+                                            <div className="w-14 h-14 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-white/20 transition-colors">
+                                                <span className="material-symbols-outlined text-primary group-hover:text-white">{cat.icon}</span>
+                                            </div>
+                                            <h4 className="font-bold text-sm tracking-tight">{cat.name}</h4>
+                                            <p className="text-[10px] uppercase font-black tracking-widest mt-1 opacity-50">{cat.count} Medicines</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Expert Safety Corner */}
+                                <div className="mt-28 p-12 rounded-[40px] bg-on-background text-white relative overflow-hidden">
+                                     <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 grayscale invert pointer-events-none">
+                                        <img src="/med-bg.png" alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="relative z-10 max-w-2xl">
+                                        <span className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-4 block">Expert Clinical Tip</span>
+                                        <h2 className="text-4xl font-black tracking-tighter mb-6 leading-[1.1]">Always verify dosage info with your medical practitioner.</h2>
+                                        <p className="text-white/60 text-lg mb-8 leading-relaxed">Vitality 2.0 uses AI-driven intelligence to map generics, but professional consultation is the final step for healthcare safety.</p>
+                                        <button className="bg-primary text-white px-8 py-4 rounded-2xl font-black hover:shadow-xl hover:shadow-primary/30 transition-all uppercase tracking-widest text-xs">Access Expert Network</button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -272,71 +354,6 @@ function Home() {
                 <main>
                     <VendorDashboard />
                 </main>
-                // <main>
-                //     {/* Vendor View */}
-                //     <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-[0px_20px_40px_rgba(11,28,48,0.04)]">
-                //         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                //             <div>
-                //                 <h2 className="text-3xl font-headline font-bold text-on-surface">Pharmacy Inventory</h2>
-                //                 <p className="text-secondary text-sm mt-1">Manage active listings and stock.</p>
-                //             </div>
-                //             <button onClick={openAddModal} className="px-6 py-3 bg-on-surface text-white rounded-full font-bold shadow-md hover:bg-black transition-all hover:scale-105 active:scale-95 text-sm flex gap-2 items-center">
-                //                 <span className="material-symbols-outlined text-sm">add</span> Add Medication
-                //             </button>
-                //         </div>
-
-                //         {inventory.length === 0 ? (
-                //             <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant text-secondary flex flex-col items-center justify-center">
-                //                 <span className="material-symbols-outlined text-5xl text-outline mb-4 opacity-50">inventory_2</span>
-                //                 <p className="font-bold text-lg text-on-surface-variant mb-2">Zero listings online</p>
-                //                 <p className="max-w-md mx-auto text-sm">You haven't listed any medications yet. Add inventory to become visible to patients searching nearby.</p>
-                //             </div>
-                //         ) : (
-                //             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-x-auto shadow-sm">
-                //                 <table className="w-full text-left font-body whitespace-nowrap min-w-[700px]">
-                //                     <thead className="bg-surface-container-low border-b border-outline-variant/30">
-                //                         <tr>
-                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Item Details</th>
-                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Pricing</th>
-                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Stock</th>
-                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider text-right">Actions</th>
-                //                         </tr>
-                //                     </thead>
-                //                     <tbody>
-                //                         {inventory.map(item => (
-                //                             <tr key={item._id} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface transition-colors group">
-                //                                 <td className="p-5">
-                //                                     <div className="font-bold text-on-surface text-base group-hover:text-primary transition-colors">{item.medicine?.name || 'Unknown'}</div>
-                //                                     <div className="text-xs text-secondary mt-1">{item.medicine?.genericName || '-'}</div>
-                //                                 </td>
-                //                                 <td className="p-5">
-                //                                     <div className="text-on-surface font-bold">₹{item.price}</div>
-                //                                     {item.mrp && <div className="text-xs line-through text-outline mt-1">MRP: ₹{item.mrp}</div>}
-                //                                 </td>
-                //                                 <td className="p-5">
-                //                                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 ${item.stock > 10 ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-error/10 text-error border border-error/20'}`}>
-                //                                         <span className={`w-1.5 h-1.5 rounded-full ${item.stock > 10 ? 'bg-primary' : 'bg-error'}`}></span>
-                //                                         {item.stock} in stock
-                //                                     </span>
-                //                                 </td>
-                //                                 <td className="p-5 text-right">
-                //                                     <div className="flex gap-1 justify-end">
-                //                                         <button onClick={() => openEditModal(item)} className="p-2 text-secondary hover:text-primary transition-colors rounded-full hover:bg-primary/10" title="Edit">
-                //                                             <span className="material-symbols-outlined text-[20px]">edit</span>
-                //                                         </button>
-                //                                         <button onClick={() => handleDeleteInventory(item._id)} className="p-2 text-secondary hover:text-error transition-colors rounded-full hover:bg-error/10" title="Delete">
-                //                                             <span className="material-symbols-outlined text-[20px]">delete</span>
-                //                                         </button>
-                //                                     </div>
-                //                                 </td>
-                //                             </tr>
-                //                         ))}
-                //                     </tbody>
-                //                 </table>
-                //             </div>
-                //         )}
-                //     </section>
-                // </main>
             )}
 
             {/* ── Add/Edit Inventory Modal ── */}
@@ -410,6 +427,7 @@ function Home() {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 }
