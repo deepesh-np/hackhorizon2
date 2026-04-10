@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
 // Load env vars
@@ -14,6 +15,7 @@ const app = express();
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   cors({
@@ -27,6 +29,9 @@ app.use(
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", require("./routes/authroutes"));
 app.use("/api/admin", require("./routes/adminroutes"));
+app.use("/api/medicines", require("./routes/medicineroutes"));
+app.use("/api/vendor", require("./routes/vendorroutes"));
+app.use("/api/prescriptions", require("./routes/prescriptionroutes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -34,6 +39,13 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "AMIAP Backend is running 🚀",
     timestamp: new Date().toISOString(),
+    availableEndpoints: {
+      auth: "/api/auth (register, login, logout, me, change-password, update-profile)",
+      admin: "/api/admin (users, vendors/pending, vendors/:id/verify, users/:id/toggle-status, users/:id)",
+      medicines: "/api/medicines (search, :id, :id/alternatives, :id/prices, :id/pharmacies, info)",
+      vendor: "/api/vendor (inventory CRUD)",
+      prescriptions: "/api/prescriptions (scan, analyze-text, history, :id)",
+    },
   });
 });
 
@@ -80,6 +92,17 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📌 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`📋 API Endpoints:`);
+  console.log(`   POST /api/auth/register`);
+  console.log(`   POST /api/auth/login`);
+  console.log(`   GET  /api/medicines/search?q=paracetamol`);
+  console.log(`   GET  /api/medicines/:id`);
+  console.log(`   GET  /api/medicines/:id/alternatives`);
+  console.log(`   GET  /api/medicines/:id/prices`);
+  console.log(`   GET  /api/medicines/:id/pharmacies?lat=x&lng=y`);
+  console.log(`   POST /api/prescriptions/scan`);
+  console.log(`   POST /api/prescriptions/analyze-text`);
+  console.log(`   GET  /api/vendor/inventory`);
 });
 
 module.exports = app;
