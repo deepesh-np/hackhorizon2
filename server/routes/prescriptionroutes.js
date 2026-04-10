@@ -1,4 +1,8 @@
 const express = require("express");
+
+const dotenv = require("dotenv");
+dotenv.config();
+
 const { protect } = require("../middleware/authmiddleware");
 const {
   scanPrescription,
