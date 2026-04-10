@@ -11,6 +11,10 @@ import Landing from './Pages/Landing'
 import Home from './Pages/Home'
 import Login from './Pages/Auth/Login'
 import Register from './Pages/Auth/Register'
+import MedicineDetail from './Pages/MedicineDetail'
+import Prescriptions from './Pages/Prescriptions'
+import Profile from './Pages/Profile'
+import AdminDashboard from './Pages/Admin/AdminDashboard'
 
 function App() {
   return (
@@ -23,6 +27,10 @@ function App() {
               <Route path="home" element={<Home />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="medicine/:id" element={<MedicineDetail />} />
+              <Route path="prescriptions" element={<Prescriptions />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="admin" element={<AdminDashboard />} />
             </Route>
           </Routes>
         </div>
