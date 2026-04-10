@@ -1,7 +1,6 @@
 const Medicine = require("../models/Medicine");
 const Inventory = require("../models/Inventory");
 const User = require("../models/User");
-const axios = require("axios");
 
 const SCRAPPER_URL = process.env.SCRAPPER_URL || "http://localhost:8000";
 

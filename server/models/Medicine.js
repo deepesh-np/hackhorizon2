@@ -34,6 +34,13 @@ const medicineSchema = new mongoose.Schema(
         "Antihistamine",
         "Antacid",
         "Cardiovascular",
+//         Develop a digital platform where users can enter, scan, or upload a
+// prescription or medicine name and receive a structured analysis of
+// the medication, including its active ingredients, therapeutic
+// purpose, and dosage form, along with a list of equivalent generic or
+// lower-cost branded alternatives. The platform should provide price
+// comparisons across multiple brands, nearby pharmacy availability,
+// and verified regulatory information to ensure safety and reliability.
         "Respiratory",
         "Gastrointestinal",
         "Neurological",

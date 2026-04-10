@@ -1,0 +1,25 @@
+OK: express
+OK: cors
+OK: dotenv
+OK: cookie-parser
+OK: config/db
+OK: routes/authroutes
+OK: routes/adminroutes
+FAIL: controllers/medicinecontroller - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+FAIL: routes/medicineroutes - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+FAIL: controllers/vendorcontroller - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+FAIL: routes/vendorroutes - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+FAIL: controllers/prescriptioncontroller - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+FAIL: routes/prescriptionroutes - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+OK: models/User
+FAIL: models/Medicine - Unexpected identifier 'a'
+  Stack: C:\Users\dell\Desktop\Projects\hackhorizon2\server\models\Medicine.js:36 |         "Cardiovascular",Develop a digital platform where users can enter, scan, or upload a |                                  ^
+OK: models/Inventory
+OK: models/Prescription
+OK: groq-sdk
