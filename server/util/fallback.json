@@ -1,0 +1,74 @@
+[
+    {
+        "brand": "Dolo 650",
+        "generic": "Paracetamol",
+        "strength": "650 mg",
+        "alternatives": "Crocin 650; Calpol 650; Pacimol 650"
+    },
+    {
+        "brand": "Crocin",
+        "generic": "Paracetamol",
+        "strength": "500 mg",
+        "alternatives": "Calpol; Metacin; Pacimol"
+    },
+    {
+        "brand": "Brufen",
+        "generic": "Ibuprofen",
+        "strength": "400 mg",
+        "alternatives": "Ibugesic; Combiflam"
+    },
+    {
+        "brand": "Combiflam",
+        "generic": "Ibuprofen+Paracetamol",
+        "strength": "400+325 mg",
+        "alternatives": "Flexon; Ibugesic Plus"
+    },
+    {
+        "brand": "Augmentin",
+        "generic": "Amoxicillin+Clavulanate",
+        "strength": "625 mg",
+        "alternatives": "Clavam; Moxikind-CV"
+    },
+    {
+        "brand": "Azithral",
+        "generic": "Azithromycin",
+        "strength": "500 mg",
+        "alternatives": "Azee 500; Zithromax"
+    },
+    {
+        "brand": "Pantocid",
+        "generic": "Pantoprazole",
+        "strength": "40 mg",
+        "alternatives": "Pan 40; Pantodac"
+    },
+    {
+        "brand": "Omez",
+        "generic": "Omeprazole",
+        "strength": "20 mg",
+        "alternatives": "Ocid; Omeez"
+    },
+    {
+        "brand": "Glycomet",
+        "generic": "Metformin",
+        "strength": "500 mg",
+        "alternatives": "Glucophage; Cetapin"
+    },
+    {
+        "brand": "Allegra",
+        "generic": "Fexofenadine",
+        "strength": "120 mg",
+        "alternatives": "Fexova; Telfast"
+    },
+    {
+        "brand": "Cetzine",
+        "generic": "Cetirizine",
+        "strength": "10 mg",
+        "alternatives": "Okacet; Alerid"
+    },
+    {
+        "brand": "Voveran",
+        "generic": "Diclofenac",
+        "strength": "50 mg",
+        "alternatives": "Dicloran; Dynapar"
+    }
+]
