@@ -1,6 +1,7 @@
 const Medicine = require("../models/Medicine");
 const Inventory = require("../models/Inventory");
 const User = require("../models/User");
+const { callGroqWithFallback, textModels } = require("../utils/groqClient");
 
 const SCRAPPER_URL = process.env.SCRAPPER_URL || "http://localhost:8000";
 
@@ -106,6 +107,198 @@ const getMedicineById = async (req, res) => {
 
     const stats = inventoryStats[0] || { minPrice: null, maxPrice: null, avgPrice: null, totalVendors: 0 };
 
+    // ── AI-powered alternatives (Groq) with DB fallback ──
+    let aiAlternativeNames = [];
+    let alternativesSource = "database";
+
+    try {
+      const ingredientList = (medicine.activeIngredients || []).map((i) => `${i.name} ${i.strength || ""}`).join(", ");
+
+      const chatCompletion = await callGroqWithFallback({
+        messages: [
+          {
+            role: "system",
+            content: `You are an Indian pharmaceutical expert. Given a medicine, list ALL known alternative brands and generics available in India.
+
+Return ONLY valid JSON:
+{
+  "alternatives": [
+    {
+      "name": "brand name with strength",
+      "genericName": "salt/generic name",
+      "manufacturer": "company name",
+      "isBranded": true,
+      "estimatedPrice": 25,
+      "dosageForm": "Tablet"
+    }
+  ]
+}
+
+Rules:
+- Include at least 10-15 alternatives if they exist
+- Include both branded and generic/Jan Aushadhi options
+- Include the generic/salt name accurately
+- estimatedPrice should be approximate MRP in INR
+- Do NOT include the original medicine itself
+- Do NOT include any text outside the JSON object`,
+          },
+          {
+            role: "user",
+            content: `List all Indian market alternatives for: "${medicine.name}" (Generic: ${medicine.genericName}, Active: ${ingredientList}, Category: ${medicine.therapeuticCategory}, Form: ${medicine.dosageForm})`,
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 2000,
+      }, textModels);
+
+      const aiResponse = chatCompletion.choices[0]?.message?.content;
+      if (aiResponse) {
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          aiAlternativeNames = parsed.alternatives || [];
+          alternativesSource = "ai+database";
+          console.log(`AI returned ${aiAlternativeNames.length} alternatives for ${medicine.name}`);
+        }
+      }
+    } catch (aiError) {
+      console.warn("AI alternatives lookup failed, falling back to database:", aiError.message);
+    }
+
+    // ── Fetch DB alternatives (always — this is the fallback baseline) ──
+    const ingredientNames = medicine.activeIngredients?.map((i) => i.name) || [];
+
+    const dbAlternatives = await Medicine.find({
+      _id: { $ne: medicine._id },
+      isActive: true,
+      $or: [
+        { _id: { $in: medicine.equivalentMedicines || [] } },
+        ...(medicine.genericName
+          ? [{ genericName: { $regex: new RegExp(`^${medicine.genericName}$`, "i") } }]
+          : []),
+        ...(ingredientNames.length > 0
+          ? [{ "activeIngredients.name": { $in: ingredientNames } }]
+          : []),
+      ],
+    })
+      .select("name genericName brand manufacturer dosageForm averagePrice isBranded packSize regulatoryApproval activeIngredients")
+      .sort({ isBranded: 1, averagePrice: 1 });
+
+    // ── Save AI suggestions to DB & merge ──
+    const dbNames = new Set(dbAlternatives.map((d) => d.name.toLowerCase()));
+    const validCategories = ["Antibiotic","Antifungal","Antiviral","Analgesic","Antipyretic","Antihypertensive","Antidiabetic","Antidepressant","Antihistamine","Antacid","Cardiovascular","Respiratory","Gastrointestinal","Neurological","Hormonal","Vitamin/Supplement","Other"];
+    const validForms = ["Tablet","Capsule","Syrup","Injection","Cream","Drops","Inhaler","Patch","Gel","Ointment","Powder","Suspension","Other"];
+
+    const newAiAlts = aiAlternativeNames.filter((ai) => ai.name && !dbNames.has(ai.name.toLowerCase()));
+
+    // Save AI alternatives to DB so they get _id and become clickable
+    const savedAiIds = [];
+    for (const ai of newAiAlts) {
+      try {
+        const category = validCategories.includes(ai.therapeuticCategory) ? ai.therapeuticCategory : (medicine.therapeuticCategory || "Other");
+        const form = validForms.includes(ai.dosageForm) ? ai.dosageForm : (medicine.dosageForm || "Other");
+
+        const saved = await Medicine.findOneAndUpdate(
+          { name: ai.name },
+          {
+            $setOnInsert: {
+              name: ai.name,
+              genericName: ai.genericName || medicine.genericName,
+              brand: ai.name?.split(" ")[0] || "Unknown",
+              manufacturer: ai.manufacturer || "Unknown",
+              dosageForm: form,
+              therapeuticCategory: category,
+              averagePrice: ai.estimatedPrice || 0,
+              isBranded: ai.isBranded !== false,
+              activeIngredients: medicine.activeIngredients || [],
+              description: ai.description || `Alternative to ${medicine.name} with the same active ingredient ${medicine.genericName}.`,
+              sideEffects: medicine.sideEffects || [],
+              regulatoryApproval: { approvedBy: "CDSCO", isApproved: true },
+              isActive: true,
+            },
+          },
+          { upsert: true, new: true }
+        );
+        savedAiIds.push(saved._id);
+      } catch (saveErr) {
+        console.warn(`Could not save AI alt "${ai.name}":`, saveErr.message);
+      }
+    }
+
+    // Re-fetch saved AI alternatives from DB so they have full schema + _id
+    let aiDbAlternatives = [];
+    if (savedAiIds.length > 0) {
+      aiDbAlternatives = await Medicine.find({ _id: { $in: savedAiIds } })
+        .select("name genericName brand manufacturer dosageForm averagePrice isBranded packSize regulatoryApproval activeIngredients description sideEffects");
+    }
+
+    // Enrich AI-from-DB alternatives with availability
+    const enrichedAi = await Promise.all(
+      aiDbAlternatives.map(async (alt) => {
+        const cheapest = await Inventory.findOne({ medicine: alt._id, inStock: true })
+          .sort({ price: 1 }).select("price mrp discount");
+        const altObj = alt.toObject();
+        altObj.isCurrentlyAvailable = !!cheapest;
+        altObj.availabilityStatus = cheapest ? "available" : "currently not available";
+        altObj.lowestPrice = cheapest?.price || alt.averagePrice || null;
+        altObj.mrp = cheapest?.mrp || null;
+        altObj.discount = cheapest?.discount || 0;
+        return altObj;
+      })
+    );
+
+    // ── Enrich DB alternatives with availability + pricing ──
+    const enrichedDb = await Promise.all(
+      dbAlternatives.map(async (alt) => {
+        const cheapest = await Inventory.findOne({
+          medicine: alt._id,
+          inStock: true,
+        })
+          .sort({ price: 1 })
+          .select("price mrp discount");
+
+        const altObj = alt.toObject();
+        altObj.isCurrentlyAvailable = !!cheapest;
+        altObj.availabilityStatus = cheapest ? "available" : "currently not available";
+        altObj.lowestPrice = cheapest?.price || alt.averagePrice || null;
+        altObj.mrp = cheapest?.mrp || null;
+        altObj.discount = cheapest?.discount || 0;
+        altObj.isFromAI = false;
+
+        // Calculate savings vs original
+        if (medicine.averagePrice && altObj.lowestPrice) {
+          altObj.savings = Math.round((medicine.averagePrice - altObj.lowestPrice) * 100) / 100;
+          altObj.savingsPercent =
+            Math.round(((medicine.averagePrice - altObj.lowestPrice) / medicine.averagePrice) * 10000) / 100;
+        }
+
+        return altObj;
+      })
+    );
+
+    // ── Combine: DB results first, then AI-saved suggestions ──
+    const allAlternatives = [...enrichedDb, ...enrichedAi];
+
+    // Add savings for all alternatives
+    for (const alt of allAlternatives) {
+      if (medicine.averagePrice && alt.lowestPrice && alt.savings === undefined) {
+        alt.savings = Math.round((medicine.averagePrice - alt.lowestPrice) * 100) / 100;
+        alt.savingsPercent =
+          Math.round(((medicine.averagePrice - alt.lowestPrice) / medicine.averagePrice) * 10000) / 100;
+      }
+    }
+
+    // Sort: available first, then by price ascending
+    allAlternatives.sort((a, b) => {
+      if (a.isCurrentlyAvailable !== b.isCurrentlyAvailable) {
+        return a.isCurrentlyAvailable ? -1 : 1;
+      }
+      return (a.lowestPrice || Infinity) - (b.lowestPrice || Infinity);
+    });
+
+    const generics = allAlternatives.filter((a) => !a.isBranded);
+    const branded = allAlternatives.filter((a) => a.isBranded);
+
     res.status(200).json({
       success: true,
       medicine,
@@ -114,6 +307,12 @@ const getMedicineById = async (req, res) => {
         maxPrice: stats.maxPrice,
         avgPrice: stats.avgPrice ? Math.round(stats.avgPrice * 100) / 100 : null,
         availableAt: stats.totalVendors,
+      },
+      alternatives: {
+        source: alternativesSource,
+        totalAlternatives: allAlternatives.length,
+        generics: { count: generics.length, medicines: generics },
+        brandedAlternatives: { count: branded.length, medicines: branded },
       },
     });
   } catch (error) {
@@ -177,6 +376,14 @@ const getAlternatives = async (req, res) => {
         return altObj;
       })
     );
+
+    // Sort: available first, then by price ascending
+    enriched.sort((a, b) => {
+      if (a.isCurrentlyAvailable !== b.isCurrentlyAvailable) {
+        return a.isCurrentlyAvailable ? -1 : 1;
+      }
+      return (a.lowestPrice || Infinity) - (b.lowestPrice || Infinity);
+    });
 
     // Separate into generics and branded alternatives
     const generics = enriched.filter((a) => !a.isBranded);
@@ -530,6 +737,74 @@ const deleteMedicine = async (req, res) => {
   }
 };
 
+// ─── @route   GET /api/medicines/:id/compare/:altId ─────────────────────────
+// @desc    AI-powered comparison: why switch (or not) from original to alternative
+// @access  Public
+const compareMedicines = async (req, res) => {
+  try {
+    const original = await Medicine.findById(req.params.id);
+    const alternative = await Medicine.findById(req.params.altId);
+
+    if (!original || !alternative) {
+      return res.status(404).json({ success: false, message: "One or both medicines not found." });
+    }
+
+    const origIngredients = (original.activeIngredients || []).map((i) => `${i.name} ${i.strength || ""}`).join(", ");
+    const altIngredients = (alternative.activeIngredients || []).map((i) => `${i.name} ${i.strength || ""}`).join(", ");
+
+    const chatCompletion = await callGroqWithFallback({
+      messages: [
+        {
+          role: "system",
+          content: `You are an Indian pharmaceutical expert. Compare two medicines and explain why a patient might switch from one to the other.
+
+Return ONLY valid JSON:
+{
+  "recommendation": "recommended" | "neutral" | "not_recommended",
+  "summary": "One line summary of the comparison",
+  "reasonsToSwitch": ["reason 1", "reason 2", ...],
+  "reasonsNotToSwitch": ["reason 1", "reason 2", ...],
+  "keyDifferences": ["difference 1", "difference 2", ...],
+  "safetyNote": "Important safety information about switching"
+}
+
+Rules:
+- Be specific and medically accurate
+- Mention price differences if relevant
+- Always include a safety note about consulting a doctor
+- Do NOT include any text outside the JSON`,
+        },
+        {
+          role: "user",
+          content: `Compare switching FROM "${original.name}" (Generic: ${original.genericName}, Active: ${origIngredients}, Category: ${original.therapeuticCategory}, Price: ₹${original.averagePrice}, Manufacturer: ${original.manufacturer}) TO "${alternative.name}" (Generic: ${alternative.genericName}, Active: ${altIngredients}, Category: ${alternative.therapeuticCategory}, Price: ₹${alternative.averagePrice}, Manufacturer: ${alternative.manufacturer})`,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
+    }, textModels);
+
+    const aiResponse = chatCompletion.choices[0]?.message?.content;
+    let comparison = null;
+
+    if (aiResponse) {
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        comparison = JSON.parse(jsonMatch[0]);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      original: { _id: original._id, name: original.name, genericName: original.genericName, averagePrice: original.averagePrice },
+      alternative: { _id: alternative._id, name: alternative.name, genericName: alternative.genericName, averagePrice: alternative.averagePrice },
+      comparison,
+    });
+  } catch (error) {
+    console.error("CompareMedicines error:", error);
+    res.status(500).json({ success: false, message: "Could not generate comparison.", comparison: null });
+  }
+};
+
 module.exports = {
   searchMedicines,
   getMedicineById,
@@ -540,4 +815,5 @@ module.exports = {
   addMedicine,
   updateMedicine,
   deleteMedicine,
+  compareMedicines,
 };

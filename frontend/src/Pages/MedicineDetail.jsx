@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import PharmacyMap from '../Components/PharmacyMap';
 
 function MedicineDetail() {
     const { id } = useParams();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const compareFrom = searchParams.get('compareFrom');
+
     const [medicine, setMedicine] = useState(null);
     const [pricing, setPricing] = useState(null);
     const [alternatives, setAlternatives] = useState(null);
@@ -14,15 +18,36 @@ function MedicineDetail() {
     const [drugInfo, setDrugInfo] = useState(null);
     const [drugInfoLoading, setDrugInfoLoading] = useState(false);
     const [drugInfoUrl, setDrugInfoUrl] = useState('');
+    const [comparison, setComparison] = useState(null);
+    const [comparisonLoading, setComparisonLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         fetchMedicineDetails();
-        fetchAlternatives();
         fetchPriceComparison();
         fetchNearbyPharmacies();
-    }, [id]);
+        
+        if (compareFrom && compareFrom !== id) {
+            fetchComparison(compareFrom, id);
+        } else {
+            setComparison(null);
+        }
+    }, [id, compareFrom]);
+
+    const fetchComparison = async (fromId, toId) => {
+        setComparisonLoading(true);
+        try {
+            const res = await api.get(`/medicines/${fromId}/compare/${toId}`);
+            if (res.data.success && res.data.comparison) {
+                setComparison(res.data.comparison);
+            }
+        } catch (err) {
+            console.error("Failed to fetch comparison", err);
+        } finally {
+            setComparisonLoading(false);
+        }
+    };
 
     const fetchMedicineDetails = async () => {
         try {
@@ -30,22 +55,12 @@ function MedicineDetail() {
             if (res.data.success) {
                 setMedicine(res.data.medicine);
                 setPricing(res.data.pricing);
+                setAlternatives(res.data.alternatives || null);
             }
         } catch (err) {
             console.error("Failed to fetch medicine details", err);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchAlternatives = async () => {
-        try {
-            const res = await api.get(`/medicines/${id}/alternatives`);
-            if (res.data.success) {
-                setAlternatives(res.data);
-            }
-        } catch (err) {
-            console.error("Failed to fetch alternatives", err);
         }
     };
 
@@ -131,6 +146,74 @@ function MedicineDetail() {
                 <span className="mx-2">›</span>
                 <span className="text-on-surface font-medium">{medicine.name}</span>
             </nav>
+
+            {comparisonLoading && (
+                <div className="bg-primary/5 border border-primary/20 p-6 rounded-3xl mb-8 flex gap-4 items-center animate-pulse">
+                    <span className="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
+                    <div>
+                        <div className="h-5 bg-primary/20 rounded w-48 mb-2"></div>
+                        <div className="h-4 bg-primary/10 rounded w-96"></div>
+                    </div>
+                </div>
+            )}
+
+            {!comparisonLoading && comparison && (
+                <div className={`mb-8 p-6 rounded-3xl border shadow-sm ${
+                    comparison.recommendation === 'recommended' ? 'bg-primary-container border-primary/30 text-on-primary-container' :
+                    comparison.recommendation === 'not_recommended' ? 'bg-error-container border-error/30 text-on-error-container' :
+                    'bg-surface-variant border-outline/30 text-on-surface-variant'
+                }`}>
+                    <div className="flex items-start gap-4 mb-4">
+                        <span className="material-symbols-outlined text-3xl mt-1">
+                            {comparison.recommendation === 'recommended' ? 'check_circle' :
+                             comparison.recommendation === 'not_recommended' ? 'cancel' : 'info'}
+                        </span>
+                        <div>
+                            <h2 className="text-lg font-bold">AI Comparison Summary</h2>
+                            <p className="text-sm font-body mt-1">{comparison.summary}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-6 mt-6">
+                        {comparison.reasonsToSwitch?.length > 0 && (
+                            <div className="bg-white/50 p-4 rounded-2xl">
+                                <h3 className="font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm">thumb_up</span> Reasons to switch
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm space-y-1">
+                                    {comparison.reasonsToSwitch.map((r, i) => <li key={i}>{r}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        {comparison.reasonsNotToSwitch?.length > 0 && (
+                            <div className="bg-white/50 p-4 rounded-2xl">
+                                <h3 className="font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-error">thumb_down</span> Reasons not to switch
+                                </h3>
+                                <ul className="list-disc pl-5 text-sm space-y-1">
+                                    {comparison.reasonsNotToSwitch.map((r, i) => <li key={i}>{r}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+
+                    {comparison.keyDifferences?.length > 0 && (
+                        <div className="mt-6">
+                            <h3 className="font-bold text-sm uppercase tracking-wider mb-2">Key Differences</h3>
+                            <ul className="list-disc pl-5 text-sm space-y-1">
+                                {comparison.keyDifferences.map((d, i) => <li key={i}>{d}</li>)}
+                            </ul>
+                        </div>
+                    )}
+
+                    {comparison.safetyNote && (
+                        <div className="mt-6 bg-error/10 border border-error/20 text-error p-3 rounded-xl flex gap-3 text-sm font-bold items-center">
+                            <span className="material-symbols-outlined">warning</span>
+                            {comparison.safetyNote}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Header Card */}
             <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-[0px_20px_40px_rgba(11,28,48,0.04)] relative overflow-hidden mb-8">
@@ -261,30 +344,38 @@ function MedicineDetail() {
 
             {activeTab === 'alternatives' && alternatives && (
                 <section className="space-y-6">
+
                     {alternatives.generics?.count > 0 && (
                         <div className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
                             <h2 className="text-xl font-headline font-bold text-on-surface mb-4">
                                 Generic Alternatives ({alternatives.generics.count})
                             </h2>
                             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                {alternatives.generics.medicines.map(alt => (
-                                    <Link to={`/medicine/${alt._id}`} key={alt._id} className="bg-surface p-5 rounded-2xl border border-outline-variant/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group">
-                                        <div className="font-bold text-on-surface group-hover:text-primary transition-colors mb-1">{alt.name}</div>
-                                        <div className="text-secondary text-sm mb-3">{alt.genericName}</div>
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
-                                                {alt.savings > 0 && (
-                                                    <div className="text-xs text-primary font-bold mt-1">Save ₹{alt.savings} ({alt.savingsPercent}%)</div>
-                                                )}
-                                                {!alt.isCurrentlyAvailable && (
-                                                    <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
-                                                )}
+                                {alternatives.generics.medicines.map((alt, idx) => {
+                                    const Wrapper = alt._id ? Link : 'div';
+                                    const wrapperProps = alt._id
+                                        ? { to: `/medicine/${alt._id}?compareFrom=${id}`, key: alt._id }
+                                        : { key: `ai-gen-${idx}` };
+                                    return (
+                                        <Wrapper {...wrapperProps} className="bg-surface p-5 rounded-2xl border border-outline-variant/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative">
+                                            <div className="font-bold text-on-surface group-hover:text-primary transition-colors mb-1">{alt.name}</div>
+                                            <div className="text-secondary text-sm mb-1">{alt.genericName}</div>
+                                            <div className="text-outline text-xs mb-3">{alt.manufacturer}</div>
+                                            <div className="flex justify-between items-end">
+                                                <div>
+                                                    <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
+                                                    {alt.savings > 0 && (
+                                                        <div className="text-xs text-primary font-bold mt-1">Save ₹{alt.savings} ({alt.savingsPercent}%)</div>
+                                                    )}
+                                                    {!alt.isCurrentlyAvailable && (
+                                                        <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
+                                                    )}
+                                                </div>
+                                                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">Generic</span>
                                             </div>
-                                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">Generic</span>
-                                        </div>
-                                    </Link>
-                                ))}
+                                        </Wrapper>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -295,21 +386,27 @@ function MedicineDetail() {
                                 Branded Alternatives ({alternatives.brandedAlternatives.count})
                             </h2>
                             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                {alternatives.brandedAlternatives.medicines.map(alt => (
-                                    <Link to={`/medicine/${alt._id}`} key={alt._id} className="bg-surface p-5 rounded-2xl border border-outline-variant/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group">
-                                        <div className="font-bold text-on-surface group-hover:text-primary transition-colors mb-1">{alt.name}</div>
-                                        <div className="text-secondary text-sm mb-3">{alt.manufacturer}</div>
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
-                                                {!alt.isCurrentlyAvailable && (
-                                                    <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
-                                                )}
+                                {alternatives.brandedAlternatives.medicines.map((alt, idx) => {
+                                    const Wrapper = alt._id ? Link : 'div';
+                                    const wrapperProps = alt._id
+                                        ? { to: `/medicine/${alt._id}?compareFrom=${id}`, key: alt._id }
+                                        : { key: `ai-brand-${idx}` };
+                                    return (
+                                        <Wrapper {...wrapperProps} className="bg-surface p-5 rounded-2xl border border-outline-variant/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative">
+                                            <div className="font-bold text-on-surface group-hover:text-primary transition-colors mb-1">{alt.name}</div>
+                                            <div className="text-secondary text-sm mb-1">{alt.manufacturer}</div>
+                                            <div className="flex justify-between items-end">
+                                                <div>
+                                                    <div className="text-primary font-bold text-xl">₹{alt.lowestPrice || alt.averagePrice || '--'}</div>
+                                                    {!alt.isCurrentlyAvailable && (
+                                                        <div className="text-[10px] text-error font-bold mt-1.5 uppercase tracking-wider">Currently Not Available</div>
+                                                    )}
+                                                </div>
+                                                <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-1 rounded font-bold">Branded</span>
                                             </div>
-                                            <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-1 rounded font-bold">Branded</span>
-                                        </div>
-                                    </Link>
-                                ))}
+                                        </Wrapper>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

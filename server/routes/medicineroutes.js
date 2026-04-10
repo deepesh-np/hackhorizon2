@@ -10,6 +10,7 @@ const {
   addMedicine,
   updateMedicine,
   deleteMedicine,
+  compareMedicines,
 } = require("../controllers/medicinecontroller");
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.get("/:id", getMedicineById);
 router.get("/:id/alternatives", getAlternatives);
 router.get("/:id/prices", getPriceComparison);
 router.get("/:id/pharmacies", getNearbyPharmacies);
+router.get("/:id/compare/:altId", compareMedicines);
 
 // ─── Admin Routes ────────────────────────────────────────────────────────────
 // Only admins can add/edit/delete medicines from the catalog
