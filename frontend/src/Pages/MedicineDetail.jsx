@@ -67,7 +67,7 @@ function MedicineDetail() {
                 try {
                     const { latitude, longitude } = position.coords;
                     setUserLocation({ lat: latitude, lng: longitude });
-                    const res = await api.get(`/medicines/${id}/pharmacies?lat=${latitude}&lng=${longitude}&radius=10`);
+                    const res = await api.get(`/medicines/${id}/pharmacies?lat=${latitude}&lng=${longitude}&radius=50`);
                     if (res.data.success) {
                         setPharmacies(res.data.pharmacies);
                     }
