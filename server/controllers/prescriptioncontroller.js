@@ -1,30 +1,8 @@
 const Groq = require("groq-sdk");
-const axios = require("axios");
 const Prescription = require("../models/Prescription");
 const Medicine = require("../models/Medicine");
-const dotenv = require("dotenv");
-
-dotenv.config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-// ─── Helper: Convert image URL → base64 data URI ────────────────────────────
-const urlToBase64 = async (url) => {
-  const response = await axios.get(url, {
-    responseType: "arraybuffer",
-    timeout: 10000,
-    headers: {
-      // Spoof browser User-Agent to avoid 403s from sites like Wikipedia
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Accept: "image/webp,image/apng,image/*,*/*;q=0.8",
-    },
-  });
-  const base64 = Buffer.from(response.data).toString("base64");
-  const mimeType =
-    response.headers["content-type"]?.split(";")[0] || "image/jpeg";
-  return `data:${mimeType};base64,${base64}`;
-};
 
 // ─── @route   POST /api/prescriptions/scan ──────────────────────────────────
 // @desc    Upload a prescription image → AI extracts medicines → returns analysis
@@ -34,45 +12,35 @@ const scanPrescription = async (req, res) => {
     const { image, imageUrl } = req.body;
 
     // Accept either base64 image or a URL
-    let imageData = image || imageUrl;
+    const imageData = image || imageUrl;
     if (!imageData) {
       return res.status(400).json({
         success: false,
-        message:
-          "Please provide a prescription image (base64 'image' or 'imageUrl').",
+        message: "Please provide a prescription image (base64 'image' or 'imageUrl').",
       });
     }
 
     const startTime = Date.now();
 
-    // ✅ If it's a URL, convert to base64 first (Groq can't fetch external URLs reliably)
-    const isOriginalUrl = imageData.startsWith("http");
-    if (isOriginalUrl) {
-      try {
-        imageData = await urlToBase64(imageData);
-      } catch (fetchErr) {
-        console.error("URL fetch error:", fetchErr.message);
-        return res.status(400).json({
-          success: false,
-          message:
-            "Could not fetch image from the provided URL. The server may be blocking access. Try uploading the image directly as base64.",
-        });
+    // Determine if it's base64 or URL
+    const isBase64 = imageData.startsWith("data:image") || !imageData.startsWith("http");
+    const imageContent = isBase64
+      ? {
+        type: "image_url",
+        image_url: {
+          url: imageData.startsWith("data:image")
+            ? imageData
+            : `data:image/jpeg;base64,${imageData}`,
+        },
       }
-    }
-
-    // Build image content block for Groq (always base64 at this point)
-    const imageContent = {
-      type: "image_url",
-      image_url: {
-        url: imageData.startsWith("data:image")
-          ? imageData
-          : `data:image/jpeg;base64,${imageData}`,
-      },
-    };
+      : {
+        type: "image_url",
+        image_url: { url: imageData },
+      };
 
     // Call Groq Vision model to extract prescription data
     const chatCompletion = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct", // ✅ Vision-capable model
+      model: "llama-3-8b-instruct",
       messages: [
         {
           role: "system",
@@ -144,8 +112,7 @@ Rules:
       console.error("AI response parse error:", parseErr, "\nRaw:", aiResponse);
       return res.status(500).json({
         success: false,
-        message:
-          "Could not parse AI response. Please try again with a clearer image.",
+        message: "Could not parse AI response. Please try again with a clearer image.",
         rawResponse: aiResponse,
       });
     }
@@ -165,9 +132,7 @@ Rules:
               { genericName: searchRegex },
               { brand: searchRegex },
             ],
-          }).select(
-            "_id name genericName brand therapeuticCategory dosageForm averagePrice"
-          );
+          }).select("_id name genericName brand therapeuticCategory dosageForm averagePrice");
 
           matchedMedicine = dbMatch || null;
         }
@@ -187,10 +152,9 @@ Rules:
     const processingTime = Date.now() - startTime;
 
     // Save prescription to DB
-    // Don't store large base64 strings — store original URL if available
     const prescription = await Prescription.create({
       user: req.user._id,
-      originalImage: isOriginalUrl ? (image || imageUrl) : "[base64_image]",
+      originalImage: isBase64 ? "[base64_image]" : imageData, // Don't store large base64 in DB
       extractedText: parsed.extractedText || "",
       extractedMedicines: medicinesWithMatches.map((m) => ({
         name: m.name,
@@ -212,19 +176,15 @@ Rules:
         const analysis = { ...med };
 
         if (med.matchedMedicine) {
+          // Count available alternatives
           const dbMed = await Medicine.findById(med.matchedMedicine);
           if (dbMed) {
-            const ingredientNames =
-              dbMed.activeIngredients?.map((i) => i.name) || [];
+            const ingredientNames = dbMed.activeIngredients?.map((i) => i.name) || [];
             const altCount = await Medicine.countDocuments({
               _id: { $ne: dbMed._id },
               isActive: true,
               $or: [
-                {
-                  genericName: {
-                    $regex: new RegExp(`^${dbMed.genericName}$`, "i"),
-                  },
-                },
+                { genericName: { $regex: new RegExp(`^${dbMed.genericName}$`, "i") } },
                 { "activeIngredients.name": { $in: ingredientNames } },
               ],
             });
@@ -246,8 +206,7 @@ Rules:
       patientInfo: parsed.patientInfo || null,
       medicines: medicinesAnalysis,
       totalMedicinesFound: medicinesAnalysis.length,
-      matchedInDatabase: medicinesAnalysis.filter((m) => m.matchedMedicine)
-        .length,
+      matchedInDatabase: medicinesAnalysis.filter((m) => m.matchedMedicine).length,
     });
   } catch (error) {
     console.error("ScanPrescription error:", error);
@@ -282,8 +241,9 @@ const analyzeText = async (req, res) => {
 
     const startTime = Date.now();
 
+    // Use Groq to parse and identify medicines from free text
     const chatCompletion = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: "llama-4-scout-17b-16e-instruct",
       messages: [
         {
           role: "system",
@@ -329,10 +289,7 @@ Return ONLY valid JSON:
     // Match with DB
     const results = await Promise.all(
       (parsed.medicines || []).map(async (med) => {
-        const searchRegex = new RegExp(
-          med.name?.trim() || text.trim(),
-          "i"
-        );
+        const searchRegex = new RegExp(med.name?.trim() || text.trim(), "i");
         const dbMatches = await Medicine.find({
           isActive: true,
           $or: [
@@ -341,9 +298,7 @@ Return ONLY valid JSON:
             { brand: searchRegex },
           ],
         })
-          .select(
-            "name genericName brand manufacturer dosageForm therapeuticCategory averagePrice isBranded packSize regulatoryApproval activeIngredients"
-          )
+          .select("name genericName brand manufacturer dosageForm therapeuticCategory averagePrice isBranded packSize regulatoryApproval activeIngredients")
           .limit(5);
 
         return {
@@ -364,9 +319,7 @@ Return ONLY valid JSON:
     });
   } catch (error) {
     console.error("AnalyzeText error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Could not analyze text." });
+    res.status(500).json({ success: false, message: "Could not analyze text." });
   }
 };
 
@@ -381,10 +334,7 @@ const getPrescriptionHistory = async (req, res) => {
     const total = await Prescription.countDocuments({ user: req.user._id });
 
     const prescriptions = await Prescription.find({ user: req.user._id })
-      .populate(
-        "extractedMedicines.matchedMedicine",
-        "name genericName brand averagePrice"
-      )
+      .populate("extractedMedicines.matchedMedicine", "name genericName brand averagePrice")
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ createdAt: -1 })
@@ -400,9 +350,7 @@ const getPrescriptionHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("GetPrescriptionHistory error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Could not fetch scan history." });
+    res.status(500).json({ success: false, message: "Could not fetch scan history." });
   }
 };
 
@@ -432,9 +380,7 @@ const getPrescriptionById = async (req, res) => {
     });
   } catch (error) {
     console.error("GetPrescriptionById error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Could not fetch prescription." });
+    res.status(500).json({ success: false, message: "Could not fetch prescription." });
   }
 };
 
