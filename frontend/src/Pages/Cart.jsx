@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 
 const Cart = () => {
   const [cart, setCart] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -31,7 +32,9 @@ const Cart = () => {
       const res = await axios.get('http://localhost:5000/api/cart', {
         withCredentials: true
       });
-      setCart(res.data.cart || []);
+      const fetchedCart = res.data.cart || [];
+      setCart(fetchedCart);
+      setSelectedItems(fetchedCart.map(i => i._id));
     } catch (error) {
       console.error('Failed to fetch cart', error);
     } finally {
@@ -55,6 +58,11 @@ const Cart = () => {
       console.error('Quantity update failed', error);
     }
   };
+  const toggleSelection = (itemId) => {
+    setSelectedItems(prev => 
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+    );
+  };
 
   const removeFromCart = async (itemId) => {
     try {
@@ -71,7 +79,7 @@ const Cart = () => {
     try {
       setCheckoutLoading(true);
       
-      const payload = {};
+      const payload = { selectedItemIds: selectedItems };
       if (userLocation) {
         payload.userLat = userLocation.lat;
         payload.userLng = userLocation.lng;
@@ -97,7 +105,8 @@ const Cart = () => {
             await axios.post('http://localhost:5000/api/payment/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_signature: response.razorpay_signature,
+              selectedItemIds: selectedItems
             }, { withCredentials: true });
             
             // Auto-generate detailed PDF Receipt
@@ -111,7 +120,9 @@ const Cart = () => {
                 
                 const tableColumn = ["Medicine", "Vendor", "Qty", "Unit Price", "Total"];
                 const tableRows = [];
-                cart.forEach(item => {
+                const itemsToBill = cart.filter(item => selectedItems.includes(item._id));
+                
+                itemsToBill.forEach(item => {
                     const lineTotal = (item.unitPrice || 0) * item.quantity;
                     tableRows.push([
                         item.medicine?.name || 'Unknown',
@@ -176,7 +187,9 @@ const Cart = () => {
     }
   };
 
-  const cartSubtotal = cart.reduce((sum, item) => sum + ((item.unitPrice || 0) * item.quantity), 0);
+  const cartSubtotal = cart
+    .filter(item => selectedItems.includes(item._id))
+    .reduce((sum, item) => sum + ((item.unitPrice || 0) * item.quantity), 0);
 
   return (
     <div className="container mx-auto p-4 md:p-8 min-h-screen">
@@ -191,12 +204,27 @@ const Cart = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
+            <div className="flex justify-between items-center bg-surface p-4 rounded-xl shadow-sm border border-outline-variant/30 text-sm font-bold text-on-surface-variant">
+              <span>{selectedItems.length} items selected for checkout</span>
+              <button 
+                  onClick={() => setSelectedItems(cart.map(i => i._id))} 
+                  className="text-primary hover:underline px-2"
+              >Select All</button>
+            </div>
             {cart.map((item) => (
               <div key={item._id} className="bg-surface border border-outline/20 p-4 rounded-xl shadow-sm flex items-center justify-between gap-4 transition-shadow hover:shadow-md">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold">{item.medicine?.name || 'Unknown Medicine'}</h3>
-                  <p className="text-sm text-on-surface-variant mb-1">Vendor: {item.vendor?.vendorDetails?.pharmacyName}</p>
-                  <p className="text-primary font-bold">₹{item.unitPrice || 0} <span className="text-xs text-on-surface-variant font-medium">/ unit</span></p>
+                <div className="flex items-center gap-4 flex-1">
+                  <input 
+                      type="checkbox" 
+                      checked={selectedItems.includes(item._id)} 
+                      onChange={() => toggleSelection(item._id)}
+                      className="w-5 h-5 rounded border-outline/30 text-primary cursor-pointer focus:ring-primary shadow-sm"
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-on-surface">{item.medicine?.name || 'Unknown Medicine'}</h3>
+                    <p className="text-sm text-secondary font-medium mb-1">Vendor: {item.vendor?.vendorDetails?.pharmacyName}</p>
+                    <p className="text-primary font-black">₹{item.unitPrice || 0} <span className="text-xs text-on-surface-variant font-medium">/ unit</span></p>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <div className="flex items-center space-x-3 bg-surface-container-high rounded-lg p-1">

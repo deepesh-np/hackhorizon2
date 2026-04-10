@@ -24,11 +24,15 @@ const DELIVERY_RATE_PER_KM = 10;
 // @access  Private
 const createOrder = async (req, res) => {
     try {
-        const { userLat, userLng } = req.body;
+        const { userLat, userLng, selectedItemIds } = req.body;
         const user = await User.findById(req.user._id).populate("cart.medicine").populate("cart.vendor");
 
         if (!user.cart || user.cart.length === 0) {
-            return res.status(400).json({ success: false, message: "Cart is empty" });
+            return res.status(400).json({ success: false, message: "Cart is empty." });
+        }
+
+        if (!selectedItemIds || !Array.isArray(selectedItemIds) || selectedItemIds.length === 0) {
+            return res.status(400).json({ success: false, message: "Please select at least one item to checkout." });
         }
 
         let totalMedicinePrice = 0;
@@ -36,8 +40,12 @@ const createOrder = async (req, res) => {
         let orderDetailsToSave = [];
         let vendorDeliveryFeesCalculated = {}; // Track processed vendors
 
-        // Calculate totals
+        // Calculate totals for ONLY selected items
         for (const item of user.cart) {
+            if (!selectedItemIds.includes(item._id.toString())) {
+                continue; // Skip unselected items
+            }
+
             const vendor = item.vendor;
             const medicine = item.medicine;
             const quantity = item.quantity;
@@ -141,7 +149,7 @@ const createOrder = async (req, res) => {
 // @access  Private
 const verifyPayment = async (req, res) => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, selectedItemIds } = req.body;
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -159,8 +167,12 @@ const verifyPayment = async (req, res) => {
                 { $set: { status: "Confirmed", paymentStatus: "Paid", razorpayPaymentId: razorpay_payment_id } }
             );
 
-            // Clear Cart
-            await User.findByIdAndUpdate(req.user._id, { $set: { cart: [] } });
+            // Remove only the selected/paid items from Cart
+            if (selectedItemIds && selectedItemIds.length > 0) {
+                await User.findByIdAndUpdate(req.user._id, { 
+                    $pull: { cart: { _id: { $in: selectedItemIds } } } 
+                });
+            }
 
             res.status(200).json({ success: true, message: "Payment successful" });
         } else {
