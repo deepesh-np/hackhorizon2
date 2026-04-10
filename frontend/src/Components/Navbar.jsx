@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { LogOut } from "lucide-react";
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -21,9 +22,9 @@ function Navbar() {
 
   // Active link styling
   const linkClass = (path) =>
-    `relative font-semibold tracking-tight transition-all duration-300 ${location.pathname === path
-      ? "text-green-600"
-      : "text-slate-600 dark:text-slate-400 hover:text-green-500"
+    `relative font-bold tracking-tight transition-all duration-300 ${location.pathname === path
+      ? "text-green-600 dark:text-green-400"
+      : "text-slate-800 dark:text-slate-200 hover:text-green-600"
     }`;
 
   // Animation variants
@@ -44,8 +45,8 @@ function Navbar() {
       initial="hidden"
       animate="show"
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-          ? "bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-lg border-b border-white/20"
-          : "bg-transparent"
+        ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-md border-b border-slate-200 dark:border-slate-800"
+        : "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-slate-800/50"
         }`}
     >
       <div className="flex justify-between items-center max-w-7xl mx-auto px-6 py-4">
@@ -55,7 +56,7 @@ function Navbar() {
           to="/"
           className="text-2xl font-black text-slate-900 dark:text-white tracking-tight"
         >
-          Vitality<span className="text-green-500">.</span>
+          Vitality<span className="text-green-600">.</span>
         </Link>
 
         {/* DESKTOP MENU */}
@@ -65,8 +66,7 @@ function Navbar() {
             <>
               {[
                 { path: "/home", label: "Dashboard" },
-                { path: "/prescriptions", label: "Prescriptions" },
-                { path: "/profile", label: "Profile" }
+                { path: "/prescriptions", label: "Prescriptions" }
               ].map((item, i) => (
                 <Link key={i} to={item.path} className={linkClass(item.path)}>
                   {item.label}
@@ -74,7 +74,7 @@ function Navbar() {
                   {location.pathname === item.path && (
                     <motion.div
                       layoutId="underline"
-                      className="absolute left-0 -bottom-1 h-[2px] w-full bg-green-500 rounded-full"
+                      className="absolute left-0 -bottom-1 h-[2px] w-full bg-green-600 rounded-full"
                     />
                   )}
                 </Link>
@@ -97,10 +97,10 @@ function Navbar() {
               <Link to="/" className={linkClass("/")}>
                 Platform
               </Link>
-              <a href="#" className="text-slate-600 hover:text-green-500">
+              <a href="#" className="font-bold text-slate-800 dark:text-slate-200 hover:text-green-600 transition-colors">
                 Solutions
               </a>
-              <a href="#" className="text-slate-600 hover:text-green-500">
+              <a href="#" className="font-bold text-slate-800 dark:text-slate-200 hover:text-green-600 transition-colors">
                 Intelligence
               </a>
             </>
@@ -112,19 +112,24 @@ function Navbar() {
 
           {user ? (
             <>
-              {/* Username */}
-              <span className="hidden sm:block text-sm text-slate-500">
-                {user.name?.split(" ")[0]}
-              </span>
+              {/* User Profile Avatar */}
+              <Link to="/profile" className="hidden sm:block">
+                <img
+                  src={user.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=0f172a&color=fff&rounded=true&bold=true`}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 shadow-sm hover:scale-105 transition-transform"
+                />
+              </Link>
 
               {/* Logout Button */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={logout}
-                className="bg-gradient-to-r from-green-500 to-emerald-400 text-white px-5 py-2 rounded-full font-bold shadow-md hover:shadow-lg"
+                className="p-2 rounded-full text-slate-700 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all"
+                title="Logout"
               >
-                Logout
+                <LogOut size={20} />
               </motion.button>
             </>
           ) : (
@@ -132,7 +137,7 @@ function Navbar() {
               {/* Login */}
               <Link
                 to="/login"
-                className="hidden sm:block text-slate-600 hover:text-green-500 font-semibold"
+                className="hidden sm:block font-bold text-slate-800 dark:text-slate-200 hover:text-green-600 transition-colors"
               >
                 Log In
               </Link>
@@ -141,7 +146,7 @@ function Navbar() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
                 <Link
                   to="/register"
-                  className="bg-gradient-to-r from-green-500 to-emerald-400 text-white px-6 py-2 rounded-full font-bold shadow-md hover:shadow-lg"
+                  className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-full font-bold shadow-md hover:shadow-lg transition-all"
                 >
                   Get Started
                 </Link>
@@ -173,8 +178,6 @@ function Navbar() {
               <>
                 <Link to="/home" onClick={() => setMenuOpen(false)}>Dashboard</Link>
                 <Link to="/prescriptions" onClick={() => setMenuOpen(false)}>Prescriptions</Link>
-                <Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
-
                 {user.role === "admin" && (
                   <Link to="/admin" onClick={() => setMenuOpen(false)}>Admin</Link>
                 )}

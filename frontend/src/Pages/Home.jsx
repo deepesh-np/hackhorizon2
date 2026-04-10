@@ -46,13 +46,16 @@ function Home() {
         }
     };
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
+    const handleSearch = async (e, directQuery = null) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const query = directQuery || searchQuery;
+        if (!query.trim()) return;
+
+        if (directQuery) setSearchQuery(directQuery); // update input field visually
 
         setIsSearching(true);
         try {
-            const res = await api.get(`/medicines/search?q=${searchQuery}`);
+            const res = await api.get(`/medicines/search?q=${query}`);
             if (res.data.success) {
                 setSearchResults(res.data.medicines || []);
             }
@@ -192,7 +195,7 @@ function Home() {
                         <div className="relative z-10 max-w-3xl">
                             <h2 className="text-3xl font-headline font-bold text-on-surface mb-6">Medical Search Engine</h2>
 
-                            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 relative">
+                            <form onSubmit={(e) => handleSearch(e)} className="flex flex-col sm:flex-row gap-4 relative">
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -208,6 +211,22 @@ function Home() {
                                     {isSearching ? 'Searching...' : 'Search'}
                                 </button>
                             </form>
+
+                            <div className="mt-5 flex flex-wrap items-center gap-3">
+                                <span className="text-sm font-bold text-on-surface-variant flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">trending_up</span> Frequently Searched:
+                                </span>
+                                {['Paracetamol', 'Amoxicillin', 'Azithromycin', 'Crocin', 'Pantoprazole'].map((med) => (
+                                    <button
+                                        key={med}
+                                        type="button"
+                                        onClick={() => handleSearch(null, med)}
+                                        className="px-4 py-1.5 bg-white/60 backdrop-blur-md border border-outline-variant/30 rounded-full text-sm font-bold text-slate-700 hover:bg-white hover:text-primary hover:border-primary/50 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:-translate-y-0.5"
+                                    >
+                                        {med}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {searchResults.length === 0 && !isSearching && searchQuery.length > 0 && (
