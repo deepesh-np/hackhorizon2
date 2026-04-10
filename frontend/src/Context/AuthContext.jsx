@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.get("/auth/me");
       if (res.data.success) {
-        setUser(res.data.data);
+        setUser(res.data.user);
       } else {
         setUser(null);
       }
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post("/auth/login", { email, password });
       if (res.data.success) {
-        setUser(res.data.data);
+        setUser(res.data.user);
         return true;
       }
     } catch (err) {
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post("/auth/register", userData);
       if (res.data.success) {
-        setUser(res.data.data);
+        setUser(res.data.user);
         return true;
       }
     } catch (err) {
