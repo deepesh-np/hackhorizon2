@@ -7,6 +7,7 @@ const {
   removeFromInventory,
   getVendorStats,
   getVendorDemand,
+  getPriceInsight,
 } = require("../controllers/vendorcontroller");
 
 const router = express.Router();
@@ -16,6 +17,7 @@ router.use(protect, authorize("vendor"), requireVerifiedVendor);
 
 router.get("/stats", getVendorStats);
 router.get("/demand", getVendorDemand);
+router.get("/price-insight", getPriceInsight);
 router.get("/inventory", getMyInventory);
 router.post("/inventory", addToInventory);
 router.put("/inventory/:id", updateInventory);

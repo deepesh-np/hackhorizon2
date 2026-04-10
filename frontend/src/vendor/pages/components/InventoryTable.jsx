@@ -11,7 +11,7 @@ const badgeStyles = {
     gray: 'bg-[#F0F0F0] text-[#888]',
 };
 
-export default function InventoryTable({ refreshTrigger }) {
+export default function InventoryTable({ refreshTrigger, onEdit, onDelete }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [inventory, setInventory] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -84,7 +84,7 @@ export default function InventoryTable({ refreshTrigger }) {
                 <table className="w-full border-collapse text-[11px]">
                     <thead>
                         <tr>
-                            {['Medicine name', 'Active ingredient', 'Dosage', 'Type', 'Price', 'Qty', 'Status', ''].map((h) => (
+                            {['Medicine name', 'Active ingredient', 'Dosage', 'Type', 'Price', 'Qty', 'Status', 'Actions'].map((h) => (
                                 <th
                                     key={h}
                                     className="py-2 px-2.5 text-left text-[9px] font-medium text-[#9ab0a0] uppercase tracking-wider border-b border-[#D5E8DC] bg-[#F7FAF8]"
@@ -133,9 +133,20 @@ export default function InventoryTable({ refreshTrigger }) {
                                             </span>
                                         </td>
                                         <td className="py-2 px-2.5 border-b border-[#EEF5F1]">
-                                            <button className="py-[3px] px-2.5 rounded-md border border-[#C8DDD0] bg-transparent text-[10px] text-[#5a7060] cursor-pointer hover:bg-[#F0FAF4] hover:text-[#1B7B3A]">
-                                                Edit
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => onEdit && onEdit(item)}
+                                                    className="py-[3px] px-2.5 rounded-md border border-[#C8DDD0] bg-transparent text-[10px] text-[#5a7060] cursor-pointer hover:bg-[#F0FAF4] hover:text-[#1B7B3A] transition-colors"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => onDelete && onDelete(item._id)}
+                                                    className="py-[3px] px-2 rounded-md border border-[#FDEDEC] bg-transparent text-[10px] text-[#C0392B] cursor-pointer hover:bg-[#FDEDEC] transition-colors"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

@@ -1,7 +1,17 @@
-export default function Topbar({ onAddMedicine }) {
+export default function Topbar({ user, activeView, onAddMedicine }) {
+    const pharmacyName = user?.vendorDetails?.pharmacyName || user?.name || 'Vendor';
+    const initials = pharmacyName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+    const viewTitles = {
+        dashboard: 'Dashboard',
+        inventory: 'Medicine Inventory',
+        orders: 'Orders & Requests',
+        analytics: 'Analytics & Insights',
+    };
+
     return (
         <div className="bg-white border-b border-[#D5E8DC] px-5 h-[52px] flex items-center gap-3 shrink-0">
-            <div className="text-sm font-medium text-[#1a1a1a]">Dashboard</div>
+            <div className="text-sm font-medium text-[#1a1a1a]">{viewTitles[activeView] || 'Dashboard'}</div>
 
             {/* Search */}
             <div className="flex-1 max-w-[300px] relative">
@@ -24,6 +34,16 @@ export default function Topbar({ onAddMedicine }) {
 
             {/* Actions */}
             <div className="flex items-center gap-2 ml-auto">
+                {/* Verified badge */}
+                {user?.vendorDetails?.isVerified && (
+                    <div className="flex items-center gap-1 py-1 px-2.5 rounded-full bg-[#D5F5E3] text-[#1B7B3A] text-[10px] font-medium">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                        </svg>
+                        Verified
+                    </div>
+                )}
+
                 {/* Bell */}
                 <div className="w-8 h-8 rounded-lg border border-[#C8DDD0] bg-[#F7FAF8] flex items-center justify-center cursor-pointer relative">
                     <svg
@@ -39,24 +59,15 @@ export default function Topbar({ onAddMedicine }) {
                     <div className="absolute top-[5px] right-[5px] w-1.5 h-1.5 rounded-full bg-[#C0392B] border-[1.5px] border-white" />
                 </div>
 
-                {/* User */}
-                <div className="w-8 h-8 rounded-lg border border-[#C8DDD0] bg-[#F7FAF8] flex items-center justify-center cursor-pointer">
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="w-3.5 h-3.5 text-[#5a7060]"
-                    >
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg>
+                {/* User avatar */}
+                <div className="w-8 h-8 rounded-lg border border-[#C8DDD0] bg-[#E8F5ED] flex items-center justify-center cursor-pointer text-[10px] font-medium text-[#1B7B3A]">
+                    {initials}
                 </div>
 
                 {/* Add Medicine */}
                 <button
                     onClick={onAddMedicine}
-                    className="flex items-center gap-1.5 py-[7px] px-3.5 bg-[#1B7B3A] text-white rounded-lg text-xs font-medium cursor-pointer border-none hover:bg-[#145C2C]"
+                    className="flex items-center gap-1.5 py-[7px] px-3.5 bg-[#1B7B3A] text-white rounded-lg text-xs font-medium cursor-pointer border-none hover:bg-[#145C2C] transition-colors"
                 >
                     <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />

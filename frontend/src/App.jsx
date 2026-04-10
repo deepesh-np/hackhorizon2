@@ -16,6 +16,9 @@ import Prescriptions from './Pages/Prescriptions'
 import Profile from './Pages/Profile'
 import AdminDashboard from './Pages/Admin/AdminDashboard'
 
+// Vendor
+import { VendorDashboard } from './vendor/pages'
+
 function App() {
   return (
     <Router>
@@ -32,6 +35,8 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="admin" element={<AdminDashboard />} />
             </Route>
+            {/* Vendor dashboard uses its own full-screen layout (no Navbar/Footer) */}
+            <Route path="/vendor" element={<VendorDashboard />} />
           </Routes>
         </div>
       </AuthProvider>

@@ -23,6 +23,12 @@ function Navbar() {
                   Admin
                 </Link>
               )}
+              {user.role === 'vendor' && (
+                <Link to="/vendor" className="text-slate-600 dark:text-slate-400 hover:text-green-600 transition-colors font-headline tracking-tight font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">storefront</span>
+                  Vendor Portal
+                </Link>
+              )}
             </>
           ) : (
             <>

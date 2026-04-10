@@ -263,13 +263,13 @@ const getVendorDemand = async (req, res) => {
     // In a real app, this would aggregate recent global user searches near vendor's location.
     // For now, we return a simulated demand based on generic medicine popularity.
     const demandCategories = [
-      { label: "Paracetamol", pct: 92, color: "bg-[#1B7B3A]" },
-      { label: "Amoxicillin", pct: 74, color: "bg-[#27AE60]" },
-      { label: "Metformin", pct: 68, color: "bg-[#52BE80]" },
-      { label: "Azithromycin", pct: 55, color: "bg-[#82E0AA]" },
-      { label: "Atorvastatin", pct: 41, color: "bg-[#ABEBC6]" },
-      { label: "Omeprazole", pct: 33, color: "bg-[#D5F5E3]" },
-      { label: "Cetirizine", pct: 24, color: "bg-[#EAFAF1]" },
+      { label: "Paracetamol", pct: 92, color: "#1B7B3A" },
+      { label: "Amoxicillin", pct: 74, color: "#27AE60" },
+      { label: "Metformin", pct: 68, color: "#52BE80" },
+      { label: "Azithromycin", pct: 55, color: "#82E0AA" },
+      { label: "Atorvastatin", pct: 41, color: "#ABEBC6" },
+      { label: "Omeprazole", pct: 33, color: "#D5F5E3" },
+      { label: "Cetirizine", pct: 24, color: "#EAFAF1" },
     ];
 
     res.status(200).json({
@@ -283,4 +283,56 @@ const getVendorDemand = async (req, res) => {
   }
 };
 
-module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory, getVendorStats, getVendorDemand };
+// ─── @route   GET /api/vendor/price-insight ─────────────────────────────────
+// @desc    Get price comparison insight for the vendor's top inventory item
+// @access  Vendor only
+const getPriceInsight = async (req, res) => {
+  try {
+    // Get vendorʼs first inventory item (or a specific one via query)
+    const { medicineId } = req.query;
+
+    let inventoryItem;
+    if (medicineId) {
+      inventoryItem = await Inventory.findOne({ vendor: req.user._id, medicine: medicineId }).populate("medicine", "name genericName averagePrice");
+    } else {
+      inventoryItem = await Inventory.findOne({ vendor: req.user._id, inStock: true }).populate("medicine", "name genericName averagePrice").sort({ lastUpdated: -1 });
+    }
+
+    if (!inventoryItem) {
+      return res.status(200).json({
+        success: true,
+        insight: null,
+        message: "No inventory items to compare.",
+      });
+    }
+
+    // Get all vendor prices for this medicine
+    const allPrices = await Inventory.find({ medicine: inventoryItem.medicine._id, inStock: true }, "price");
+    const prices = allPrices.map(i => i.price);
+    const areaAvg = prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+    const lowestPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const highestPrice = prices.length > 0 ? Math.max(...prices) : 0;
+
+    const yourPrice = inventoryItem.price;
+    const savingsPct = areaAvg > 0 ? Math.round(((areaAvg - yourPrice) / areaAvg) * 100) : 0;
+
+    res.status(200).json({
+      success: true,
+      insight: {
+        medicineName: `${inventoryItem.medicine.name}`,
+        medicineGeneric: inventoryItem.medicine.genericName,
+        yourPrice,
+        areaAvg,
+        lowestPrice,
+        highestPrice,
+        savingsPct,
+        totalVendors: prices.length,
+      },
+    });
+  } catch (error) {
+    console.error("GetPriceInsight error:", error);
+    res.status(500).json({ success: false, message: "Could not fetch price insight." });
+  }
+};
+
+module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory, getVendorStats, getVendorDemand, getPriceInsight };

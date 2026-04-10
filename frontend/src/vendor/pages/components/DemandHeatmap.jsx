@@ -6,7 +6,7 @@ export default function DemandHeatmap({ data }) {
         <div className="bg-white border border-[#D5E8DC] rounded-xl overflow-hidden flex flex-col min-h-[250px]">
             <div className="flex items-center justify-between p-3 px-3.5 border-b border-[#D5E8DC]">
                 <span className="text-[13px] font-medium text-[#1a1a1a]">Nearby demand heatmap</span>
-                <span className="text-[10px] text-[#9ab0a0]">Dhanbad area</span>
+                <span className="text-[10px] text-[#9ab0a0]">Your area</span>
             </div>
 
             <div className="px-3.5 pt-2.5 pb-1 text-[10px] text-[#9ab0a0]">
@@ -14,11 +14,16 @@ export default function DemandHeatmap({ data }) {
             </div>
 
             <div className="flex flex-col gap-1.5 p-3 px-3.5 flex-1">
-                {heatmapData.map((item) => (
+                {heatmapData.length === 0 ? (
+                    <div className="text-[11px] text-[#9ab0a0] text-center py-4">No demand data available.</div>
+                ) : heatmapData.map((item) => (
                     <div key={item.label} className="flex items-center gap-2">
                         <span className="text-[10px] text-[#5a7060] w-[90px] shrink-0">{item.label}</span>
                         <div className="flex-1 h-3.5 bg-[#EEF5F1] rounded overflow-hidden">
-                            <div className={`h-full rounded ${item.color}`} style={{ width: `${item.pct}%` }} />
+                            <div
+                                className="h-full rounded transition-all duration-500"
+                                style={{ width: `${item.pct}%`, backgroundColor: item.color }}
+                            />
                         </div>
                         <span className="text-[10px] text-[#9ab0a0] w-7 text-right">{item.pct}%</span>
                     </div>
