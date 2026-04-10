@@ -124,7 +124,7 @@ const login = async (req, res) => {
     sendTokenResponse(user, 200, res, "Login successful.");
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Server error during login." });
+    res.status(500).json({ success: false, message: error});
   }
 };
 
