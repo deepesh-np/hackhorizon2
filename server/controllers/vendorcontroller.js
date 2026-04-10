@@ -212,4 +212,75 @@ async function updateAveragePrice(medicineId) {
   }
 }
 
-module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory };
+// ─── @route   GET /api/vendor/stats ─────────────────────────────────────────
+// @desc    Get dashboard aggregate stats
+// @access  Vendor only
+const getVendorStats = async (req, res) => {
+  try {
+    const Order = require("../models/Order");
+
+    // 1. Total medicines listed
+    const totalMedicines = await Inventory.countDocuments({ vendor: req.user._id });
+
+    // 2. Medicines in stock & low stock
+    const inventoryData = await Inventory.find({ vendor: req.user._id }, "stock inStock");
+    const inStockCount = inventoryData.filter(i => i.inStock).length;
+    const lowStockCount = inventoryData.filter(i => i.stock > 0 && i.stock <= 10).length + inventoryData.filter(i => !i.inStock).length;
+
+    // 3. Orders today & Revenue today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const todayOrders = await Order.find({
+      vendor: req.user._id,
+      createdAt: { $gte: startOfToday },
+    });
+
+    const totalOrdersToday = todayOrders.length;
+    const revenueToday = todayOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalMedicines,
+        inStockCount,
+        lowStockCount,
+        totalOrdersToday,
+        revenueToday,
+      },
+    });
+  } catch (error) {
+    console.error("GetVendorStats error:", error);
+    res.status(500).json({ success: false, message: "Could not fetch stats." });
+  }
+};
+
+// ─── @route   GET /api/vendor/demand ────────────────────────────────────────
+// @desc    Get nearby simulated demand heatmap
+// @access  Vendor only
+const getVendorDemand = async (req, res) => {
+  try {
+    // In a real app, this would aggregate recent global user searches near vendor's location.
+    // For now, we return a simulated demand based on generic medicine popularity.
+    const demandCategories = [
+      { label: "Paracetamol", pct: 92, color: "bg-[#1B7B3A]" },
+      { label: "Amoxicillin", pct: 74, color: "bg-[#27AE60]" },
+      { label: "Metformin", pct: 68, color: "bg-[#52BE80]" },
+      { label: "Azithromycin", pct: 55, color: "bg-[#82E0AA]" },
+      { label: "Atorvastatin", pct: 41, color: "bg-[#ABEBC6]" },
+      { label: "Omeprazole", pct: 33, color: "bg-[#D5F5E3]" },
+      { label: "Cetirizine", pct: 24, color: "bg-[#EAFAF1]" },
+    ];
+
+    res.status(200).json({
+      success: true,
+      demand: demandCategories,
+      alert: "Paracetamol demand high — restock immediately"
+    });
+  } catch (error) {
+    console.error("GetVendorDemand error:", error);
+    res.status(500).json({ success: false, message: "Could not fetch demand." });
+  }
+};
+
+module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory, getVendorStats, getVendorDemand };

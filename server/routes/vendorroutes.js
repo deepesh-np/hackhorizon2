@@ -5,6 +5,8 @@ const {
   addToInventory,
   updateInventory,
   removeFromInventory,
+  getVendorStats,
+  getVendorDemand,
 } = require("../controllers/vendorcontroller");
 
 const router = express.Router();
@@ -12,6 +14,8 @@ const router = express.Router();
 // All vendor routes require authentication + vendor role + verified status
 router.use(protect, authorize("vendor"), requireVerifiedVendor);
 
+router.get("/stats", getVendorStats);
+router.get("/demand", getVendorDemand);
 router.get("/inventory", getMyInventory);
 router.post("/inventory", addToInventory);
 router.put("/inventory/:id", updateInventory);
