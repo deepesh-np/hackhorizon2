@@ -246,7 +246,10 @@ function MedicineDetail() {
                         {medicine.regulatoryApproval && (
                             <div>
                                 <h4 className="text-xs uppercase font-bold text-on-surface-variant tracking-wider mb-1">Regulatory Approval</h4>
-                                <p className="text-on-surface">{medicine.regulatoryApproval}</p>
+                                <p className="text-on-surface">
+                                    {medicine.regulatoryApproval.approvedBy || 'N/A'}
+                                    {medicine.regulatoryApproval.isApproved && <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Approved ✓</span>}
+                                </p>
                             </div>
                         )}
                     </div>
