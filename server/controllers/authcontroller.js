@@ -184,21 +184,32 @@ const changePassword = async (req, res) => {
 };
 
 // ─── @route   PUT /api/auth/update-profile ───────────────────────────────────
-// @desc    Update name, phone, vendorDetails
+// @desc    Update name, phone, profilePicture, vendorDetails
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const allowedFields = ["name", "phone"];
+    const allowedFields = ["name", "phone", "profilePicture"];
     const updates = {};
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
-    // Vendors can update their pharmacy address
+    // Vendors can update their pharmacy details
     if (req.user.role === "vendor" && req.body.vendorDetails) {
-      const { address } = req.body.vendorDetails;
-      if (address) updates["vendorDetails.address"] = address;
+      const vd = req.body.vendorDetails;
+      if (vd.pharmacyName) updates["vendorDetails.pharmacyName"] = vd.pharmacyName;
+      if (vd.licenseNumber) updates["vendorDetails.licenseNumber"] = vd.licenseNumber;
+      if (vd.address) updates["vendorDetails.address"] = vd.address;
+      if (vd.address?.coordinates) {
+        const { lat, lng } = vd.address.coordinates;
+        if (lat && lng) {
+          updates["vendorDetails.location"] = {
+            type: "Point",
+            coordinates: [lng, lat],
+          };
+        }
+      }
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, {
