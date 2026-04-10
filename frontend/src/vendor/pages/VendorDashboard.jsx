@@ -3,14 +3,12 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import StatsRow from './components/StatsRow';
 import InventoryTable from './components/InventoryTable';
-import LowStockAlerts from './components/LowStockAlerts';
+// import LowStockAlerts from './components/LowStockAlerts';
 import PriceInsight from './components/PriceInsight';
 import OrdersTable from './components/OrdersTable';
 import DemandHeatmap from './components/DemandHeatmap';
 import AddMedicineModal from './components/AddMedicineModal';
-
-// Assuming frontend is running on 5173 and backend on 5000:
-const API_BASE = 'http://localhost:5000/api';
+import api from '../../services/api';
 
 export default function VendorDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,32 +18,16 @@ export default function VendorDashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger to re-fetch on updates
 
   useEffect(() => {
-    // Note: In a real app, pass the actual vendor token.
-    // For this prototype, we're assuming a valid token is sent via credentials or headers.
     const fetchDashboardData = async () => {
       try {
-        // Fetch stats
-        const statsRes = await fetch(`${API_BASE}/vendor/stats`, {
-          // headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } 
-        });
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData.stats);
-        }
+        const statsRes = await api.get('/vendor/stats');
+        setStats(statsRes.data.stats);
 
-        // Fetch orders
-        const ordersRes = await fetch(`${API_BASE}/orders/vendor`);
-        if (ordersRes.ok) {
-          const ordersData = await ordersRes.json();
-          setOrders(ordersData.orders || []);
-        }
+        const ordersRes = await api.get('/orders/vendor');
+        setOrders(ordersRes.data.orders || []);
 
-        // Fetch demand
-        const demandRes = await fetch(`${API_BASE}/vendor/demand`);
-        if (demandRes.ok) {
-          const demandData = await demandRes.json();
-          setDemand({ list: demandData.demand, alert: demandData.alert });
-        }
+        const demandRes = await api.get('/vendor/demand');
+        setDemand({ list: demandRes.data.demand, alert: demandRes.data.alert });
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       }
@@ -68,7 +50,7 @@ export default function VendorDashboard() {
           <div className="grid grid-cols-[2fr_1fr] gap-3.5">
             <InventoryTable refreshTrigger={refreshTrigger} />
             <div className="flex flex-col gap-3.5">
-              <LowStockAlerts refreshTrigger={refreshTrigger} />
+              {/* <LowStockAlerts refreshTrigger={refreshTrigger} /> */}
               <PriceInsight />
             </div>
           </div>

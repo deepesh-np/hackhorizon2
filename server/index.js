@@ -33,6 +33,7 @@ app.use("/api/medicines", require("./routes/medicineroutes"));
 app.use("/api/vendor", require("./routes/vendorroutes"));
 app.use("/api/prescriptions", require("./routes/prescriptionroutes"));
 
+app.use("/api/orders", require("./routes/orderroutes"));
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({

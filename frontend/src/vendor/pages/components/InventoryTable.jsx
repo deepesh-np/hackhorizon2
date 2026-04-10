@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import api from '../../../services/api';
 
 const filters = ['All', 'In Stock', 'Low Stock', 'Out of Stock'];
 
@@ -10,8 +11,6 @@ const badgeStyles = {
     gray: 'bg-[#F0F0F0] text-[#888]',
 };
 
-const API_BASE = 'http://localhost:5000/api';
-
 export default function InventoryTable({ refreshTrigger }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [inventory, setInventory] = useState([]);
@@ -21,21 +20,21 @@ export default function InventoryTable({ refreshTrigger }) {
         const fetchInventory = async () => {
             setLoading(true);
             try {
-                let url = `${API_BASE}/vendor/inventory?limit=50`;
-                if (activeFilter === 'In Stock') url += '&inStock=true';
+                const params = {
+                    limit: 50,
+                    ...(activeFilter === 'In Stock' ? { inStock: true } : {}),
+                };
 
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    let items = data.inventory || [];
+                const res = await api.get('/vendor/inventory', { params });
+                const data = res.data;
+                let items = data.inventory || [];
 
-                    if (activeFilter === 'Low Stock') {
-                        items = items.filter(i => i.stock > 0 && i.stock <= 10);
-                    } else if (activeFilter === 'Out of Stock') {
-                        items = items.filter(i => i.stock === 0 || !i.inStock);
-                    }
-                    setInventory(items);
+                if (activeFilter === 'Low Stock') {
+                    items = items.filter(i => i.stock > 0 && i.stock <= 10);
+                } else if (activeFilter === 'Out of Stock') {
+                    items = items.filter(i => i.stock === 0 || !i.inStock);
                 }
+                setInventory(items);
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             } finally {

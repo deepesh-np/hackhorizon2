@@ -1,6 +1,9 @@
 const Groq = require("groq-sdk");
 const Prescription = require("../models/Prescription");
 const Medicine = require("../models/Medicine");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 

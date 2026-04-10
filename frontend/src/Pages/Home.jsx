@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContext';
 import api from '../services/api';
+import { VendorDashboard } from '../vendor/pages/index'
 
 function Home() {
     const { user, loading, logout } = useAuth();
     const navigate = useNavigate();
-    
+
     // Patient Search State
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -48,7 +49,7 @@ function Home() {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!searchQuery.trim()) return;
-        
+
         setIsSearching(true);
         try {
             const res = await api.get(`/medicines/search?q=${searchQuery}`);
@@ -174,7 +175,7 @@ function Home() {
                         {user.role === 'vendor' ? 'Manage your pharmacy inventory & insights' : 'Compare medicines & upload prescriptions seamlessly'}
                     </p>
                 </div>
-                <button 
+                <button
                     onClick={logout}
                     className="px-8 py-3 bg-white border border-error/30 text-error rounded-full font-bold shadow-sm hover:bg-error/5 hover:border-error transition-all duration-300 font-body text-sm"
                 >
@@ -190,17 +191,17 @@ function Home() {
 
                         <div className="relative z-10 max-w-3xl">
                             <h2 className="text-3xl font-headline font-bold text-on-surface mb-6">Medical Search Engine</h2>
-                            
+
                             <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 relative">
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search for Paracetamol, Dolo 650..." 
+                                    placeholder="Search for Paracetamol, Dolo 650..."
                                     className="flex-1 px-8 py-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white shadow-sm focus:outline-none focus:ring-4 focus:ring-primary/20 text-lg font-body text-on-surface transition-all placeholder:text-outline"
                                 />
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={isSearching}
                                     className="px-10 py-5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-bold hover:shadow-[0_10px_30px_rgba(34,197,94,0.3)] hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0 text-lg"
                                 >
@@ -208,7 +209,7 @@ function Home() {
                                 </button>
                             </form>
                         </div>
-                        
+
                         {searchResults.length === 0 && !isSearching && searchQuery.length > 0 && (
                             <div className="mt-8 p-6 bg-white/50 backdrop-blur rounded-xl border border-outline-variant/30 text-secondary relative z-10">
                                 No medicines found matching "{searchQuery}".
@@ -250,70 +251,73 @@ function Home() {
                 </main>
             ) : (
                 <main>
-                    {/* Vendor View */}
-                    <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-[0px_20px_40px_rgba(11,28,48,0.04)]">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                            <div>
-                                <h2 className="text-3xl font-headline font-bold text-on-surface">Pharmacy Inventory</h2>
-                                <p className="text-secondary text-sm mt-1">Manage active listings and stock.</p>
-                            </div>
-                            <button onClick={openAddModal} className="px-6 py-3 bg-on-surface text-white rounded-full font-bold shadow-md hover:bg-black transition-all hover:scale-105 active:scale-95 text-sm flex gap-2 items-center">
-                                <span className="material-symbols-outlined text-sm">add</span> Add Medication
-                            </button>
-                        </div>
-                        
-                        {inventory.length === 0 ? (
-                            <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant text-secondary flex flex-col items-center justify-center">
-                                <span className="material-symbols-outlined text-5xl text-outline mb-4 opacity-50">inventory_2</span>
-                                <p className="font-bold text-lg text-on-surface-variant mb-2">Zero listings online</p>
-                                <p className="max-w-md mx-auto text-sm">You haven't listed any medications yet. Add inventory to become visible to patients searching nearby.</p>
-                            </div>
-                        ) : (
-                            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-x-auto shadow-sm">
-                                <table className="w-full text-left font-body whitespace-nowrap min-w-[700px]">
-                                    <thead className="bg-surface-container-low border-b border-outline-variant/30">
-                                        <tr>
-                                            <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Item Details</th>
-                                            <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Pricing</th>
-                                            <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Stock</th>
-                                            <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {inventory.map(item => (
-                                            <tr key={item._id} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface transition-colors group">
-                                                <td className="p-5">
-                                                    <div className="font-bold text-on-surface text-base group-hover:text-primary transition-colors">{item.medicine?.name || 'Unknown'}</div>
-                                                    <div className="text-xs text-secondary mt-1">{item.medicine?.genericName || '-'}</div>
-                                                </td>
-                                                <td className="p-5">
-                                                    <div className="text-on-surface font-bold">₹{item.price}</div>
-                                                    {item.mrp && <div className="text-xs line-through text-outline mt-1">MRP: ₹{item.mrp}</div>}
-                                                </td>
-                                                <td className="p-5">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 ${item.stock > 10 ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-error/10 text-error border border-error/20'}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${item.stock > 10 ? 'bg-primary' : 'bg-error'}`}></span>
-                                                        {item.stock} in stock
-                                                    </span>
-                                                </td>
-                                                <td className="p-5 text-right">
-                                                    <div className="flex gap-1 justify-end">
-                                                        <button onClick={() => openEditModal(item)} className="p-2 text-secondary hover:text-primary transition-colors rounded-full hover:bg-primary/10" title="Edit">
-                                                            <span className="material-symbols-outlined text-[20px]">edit</span>
-                                                        </button>
-                                                        <button onClick={() => handleDeleteInventory(item._id)} className="p-2 text-secondary hover:text-error transition-colors rounded-full hover:bg-error/10" title="Delete">
-                                                            <span className="material-symbols-outlined text-[20px]">delete</span>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </section>
+                    <VendorDashboard />
                 </main>
+                // <main>
+                //     {/* Vendor View */}
+                //     <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-[0px_20px_40px_rgba(11,28,48,0.04)]">
+                //         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                //             <div>
+                //                 <h2 className="text-3xl font-headline font-bold text-on-surface">Pharmacy Inventory</h2>
+                //                 <p className="text-secondary text-sm mt-1">Manage active listings and stock.</p>
+                //             </div>
+                //             <button onClick={openAddModal} className="px-6 py-3 bg-on-surface text-white rounded-full font-bold shadow-md hover:bg-black transition-all hover:scale-105 active:scale-95 text-sm flex gap-2 items-center">
+                //                 <span className="material-symbols-outlined text-sm">add</span> Add Medication
+                //             </button>
+                //         </div>
+
+                //         {inventory.length === 0 ? (
+                //             <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant text-secondary flex flex-col items-center justify-center">
+                //                 <span className="material-symbols-outlined text-5xl text-outline mb-4 opacity-50">inventory_2</span>
+                //                 <p className="font-bold text-lg text-on-surface-variant mb-2">Zero listings online</p>
+                //                 <p className="max-w-md mx-auto text-sm">You haven't listed any medications yet. Add inventory to become visible to patients searching nearby.</p>
+                //             </div>
+                //         ) : (
+                //             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-x-auto shadow-sm">
+                //                 <table className="w-full text-left font-body whitespace-nowrap min-w-[700px]">
+                //                     <thead className="bg-surface-container-low border-b border-outline-variant/30">
+                //                         <tr>
+                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Item Details</th>
+                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Pricing</th>
+                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider">Stock</th>
+                //                             <th className="p-5 font-bold text-on-surface-variant uppercase text-xs tracking-wider text-right">Actions</th>
+                //                         </tr>
+                //                     </thead>
+                //                     <tbody>
+                //                         {inventory.map(item => (
+                //                             <tr key={item._id} className="border-b border-outline-variant/10 last:border-0 hover:bg-surface transition-colors group">
+                //                                 <td className="p-5">
+                //                                     <div className="font-bold text-on-surface text-base group-hover:text-primary transition-colors">{item.medicine?.name || 'Unknown'}</div>
+                //                                     <div className="text-xs text-secondary mt-1">{item.medicine?.genericName || '-'}</div>
+                //                                 </td>
+                //                                 <td className="p-5">
+                //                                     <div className="text-on-surface font-bold">₹{item.price}</div>
+                //                                     {item.mrp && <div className="text-xs line-through text-outline mt-1">MRP: ₹{item.mrp}</div>}
+                //                                 </td>
+                //                                 <td className="p-5">
+                //                                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 ${item.stock > 10 ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-error/10 text-error border border-error/20'}`}>
+                //                                         <span className={`w-1.5 h-1.5 rounded-full ${item.stock > 10 ? 'bg-primary' : 'bg-error'}`}></span>
+                //                                         {item.stock} in stock
+                //                                     </span>
+                //                                 </td>
+                //                                 <td className="p-5 text-right">
+                //                                     <div className="flex gap-1 justify-end">
+                //                                         <button onClick={() => openEditModal(item)} className="p-2 text-secondary hover:text-primary transition-colors rounded-full hover:bg-primary/10" title="Edit">
+                //                                             <span className="material-symbols-outlined text-[20px]">edit</span>
+                //                                         </button>
+                //                                         <button onClick={() => handleDeleteInventory(item._id)} className="p-2 text-secondary hover:text-error transition-colors rounded-full hover:bg-error/10" title="Delete">
+                //                                             <span className="material-symbols-outlined text-[20px]">delete</span>
+                //                                         </button>
+                //                                     </div>
+                //                                 </td>
+                //                             </tr>
+                //                         ))}
+                //                     </tbody>
+                //                 </table>
+                //             </div>
+                //         )}
+                //     </section>
+                // </main>
             )}
 
             {/* ── Add/Edit Inventory Modal ── */}
@@ -326,7 +330,7 @@ function Home() {
                         <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">
                             {editingItem ? 'Update Inventory' : 'Add to Inventory'}
                         </h2>
-                        
+
                         {modalError && (
                             <div className="mb-4 p-3 bg-error-container text-on-error-container rounded-xl text-sm font-bold">{modalError}</div>
                         )}

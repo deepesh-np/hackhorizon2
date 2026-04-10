@@ -1,6 +1,5 @@
 import { useState } from 'react';
-
-const API_BASE = 'http://localhost:5000/api';
+import api from '../../../services/api';
 
 export default function AddMedicineModal({ onClose, onSuccess }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -26,11 +25,8 @@ export default function AddMedicineModal({ onClose, onSuccess }) {
 
         setIsSearching(true);
         try {
-            const res = await fetch(`${API_BASE}/medicines/search?q=${encodeURIComponent(query)}`);
-            if (res.ok) {
-                const data = await res.json();
-                setSearchResults(data.data || []);
-            }
+            const res = await api.get('/medicines/search', { params: { q: query } });
+            setSearchResults(res.data.medicines || []);
         } catch (err) {
             console.error(err);
         } finally {
@@ -51,26 +47,18 @@ export default function AddMedicineModal({ onClose, onSuccess }) {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/vendor/inventory`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    medicineId: selectedMed._id,
-                    price: Number(price),
-                    stock: Number(stock),
-                    expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) // Mock 1yr expiry
-                })
+            await api.post('/vendor/inventory', {
+                medicineId: selectedMed._id,
+                price: Number(price),
+                stock: Number(stock),
+                expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Mock 1yr expiry
             });
 
-            if (res.ok) {
-                if (onSuccess) onSuccess();
-            } else {
-                const errorData = await res.json();
-                alert(errorData.message || 'Failed to add medicine');
-            }
+            if (onSuccess) onSuccess();
         } catch (err) {
+            const errorData = err.response?.data;
             console.error("Save error:", err);
-            alert("Error connecting to server");
+            alert(errorData?.message || 'Failed to add medicine');
         }
     };
 
