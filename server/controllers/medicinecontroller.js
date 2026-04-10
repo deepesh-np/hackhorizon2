@@ -327,6 +327,7 @@ const getNearbyPharmacies = async (req, res) => {
         pharmacyName: vendor.vendorDetails?.pharmacyName || vendor.name,
         phone: vendor.phone,
         address: vendor.vendorDetails?.address || {},
+        coordinates: vendorCoords || null,
         distance: distance ? Math.round(distance * 100) / 100 : null,
         distanceUnit: "km",
         price: inventory?.price || null,

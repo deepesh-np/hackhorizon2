@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import PharmacyMap from '../Components/PharmacyMap';
 
 function MedicineDetail() {
     const { id } = useParams();
@@ -9,6 +10,7 @@ function MedicineDetail() {
     const [alternatives, setAlternatives] = useState(null);
     const [priceComparison, setPriceComparison] = useState(null);
     const [pharmacies, setPharmacies] = useState(null);
+    const [userLocation, setUserLocation] = useState(null);
     const [drugInfo, setDrugInfo] = useState(null);
     const [drugInfoLoading, setDrugInfoLoading] = useState(false);
     const [drugInfoUrl, setDrugInfoUrl] = useState('');
@@ -64,6 +66,7 @@ function MedicineDetail() {
             async (position) => {
                 try {
                     const { latitude, longitude } = position.coords;
+                    setUserLocation({ lat: latitude, lng: longitude });
                     const res = await api.get(`/medicines/${id}/pharmacies?lat=${latitude}&lng=${longitude}&radius=10`);
                     if (res.data.success) {
                         setPharmacies(res.data.pharmacies);
@@ -356,22 +359,25 @@ function MedicineDetail() {
                 <section className="bg-white p-8 rounded-3xl border border-outline-variant/30 shadow-sm">
                     <h2 className="text-xl font-headline font-bold text-on-surface mb-6">Nearby Pharmacies</h2>
                     {pharmacies?.count > 0 ? (
-                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                            {pharmacies.list.map((ph, i) => (
-                                <div key={i} className="bg-surface p-5 rounded-2xl border border-outline-variant/30">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="font-bold text-on-surface">{ph.pharmacyName}</div>
-                                        {ph.distance && <span className="text-xs bg-surface-container-high px-2 py-1 rounded font-bold text-on-surface-variant">{ph.distance} km</span>}
+                        <>
+                            <PharmacyMap pharmacies={pharmacies.list} userLocation={userLocation} />
+                            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mt-6">
+                                {pharmacies.list.map((ph, i) => (
+                                    <div key={i} className="bg-surface p-5 rounded-2xl border border-outline-variant/30">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="font-bold text-on-surface">{ph.pharmacyName}</div>
+                                            {ph.distance && <span className="text-xs bg-surface-container-high px-2 py-1 rounded font-bold text-on-surface-variant">{ph.distance} km</span>}
+                                        </div>
+                                        {ph.address?.street && <div className="text-sm text-secondary mb-2">{ph.address.street}, {ph.address.city}</div>}
+                                        {ph.phone && <div className="text-sm text-secondary">📞 {ph.phone}</div>}
+                                        <div className="mt-3 flex justify-between items-center">
+                                            <div className="text-primary font-bold text-lg">₹{ph.price || '--'}</div>
+                                            <span className="text-xs text-secondary">Stock: {ph.stock || 'Unknown'}</span>
+                                        </div>
                                     </div>
-                                    {ph.address?.street && <div className="text-sm text-secondary mb-2">{ph.address.street}, {ph.address.city}</div>}
-                                    {ph.phone && <div className="text-sm text-secondary">📞 {ph.phone}</div>}
-                                    <div className="mt-3 flex justify-between items-center">
-                                        <div className="text-primary font-bold text-lg">₹{ph.price || '--'}</div>
-                                        <span className="text-xs text-secondary">Stock: {ph.stock || 'Unknown'}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        </>
                     ) : (
                         <div className="text-center py-12 text-secondary">
                             <p className="mb-2">No nearby pharmacies found stocking this medicine.</p>
