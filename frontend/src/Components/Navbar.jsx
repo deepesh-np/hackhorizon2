@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import { useLanguage } from "../Context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut } from "lucide-react";
 
 function Navbar() {
   const { user, logout } = useAuth();
+  const { t, lang, toggleLanguage } = useLanguage();
   const location = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -53,9 +55,9 @@ function Navbar() {
           {user ? (
             <>
               {[
-                { path: "/home", label: "Intelligence Hub", icon: "dashboard_customize" },
-                { path: "/prescriptions", label: "Clinical Logs", icon: "assignment_late" },
-                { path: "/cart", label: "Cart", icon: "shopping_cart" }
+                { path: "/home", label: t("nav_home"), icon: "dashboard_customize" },
+                { path: "/prescriptions", label: t("nav_clinics"), icon: "assignment_late" },
+                { path: "/cart", label: t("nav_cart"), icon: "shopping_cart" }
               ].map((item, i) => (
                 <Link key={i} to={item.path} className={linkClass(item.path)}>
                   <span className="material-symbols-outlined text-[18px] mr-2">{item.icon}</span>
@@ -66,14 +68,14 @@ function Navbar() {
               {user.role === "admin" && (
                 <Link to="/admin" className={linkClass("/admin")}>
                   <span className="material-symbols-outlined text-[18px] mr-2">admin_panel_settings</span>
-                  Network Admin
+                  {t("nav_admin")}
                 </Link>
               )}
 
               {user.role === "vendor" && (
                 <Link to="/vendor" className={linkClass("/vendor")}>
                   <span className="material-symbols-outlined text-[18px] mr-2">store</span>
-                  Pharmacy Portal
+                  {t("nav_vendor")}
                 </Link>
               )}
             </>
@@ -81,11 +83,11 @@ function Navbar() {
             <>
               <Link to="/" className={linkClass("/")}>
                 <span className="material-symbols-outlined text-[18px] mr-2">home</span>
-                Platform
+                {t("nav_platform")}
               </Link>
               <Link to="/login" className={linkClass("/login")}>
                 <span className="material-symbols-outlined text-[18px] mr-2">login</span>
-                Authentication
+                {t("nav_auth")}
               </Link>
             </>
           )}
@@ -93,6 +95,13 @@ function Navbar() {
 
         {/* RIGHT SIDE - Actions */}
         <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleLanguage} 
+            className="flex items-center gap-1 bg-surface-container hover:bg-primary hover:text-white transition-colors px-3 py-1.5 rounded-full text-xs font-bold border border-outline/20"
+          >
+            <span className="material-symbols-outlined text-[16px]">translate</span>
+            {t("switch_lang")}
+          </button>
           {user ? (
             <div className="flex items-center gap-2 pl-4 border-l border-outline/50">
               <Link

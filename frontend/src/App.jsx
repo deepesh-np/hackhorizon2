@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './Context/AuthContext'
+import { LanguageProvider } from './Context/LanguageContext'
 import './index.css'
 
 // Layouts
@@ -23,9 +24,10 @@ import { VendorDashboard } from './vendor/pages'
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <div className="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container" style={{ fontFamily: "'Inter', sans-serif" }}>
-          <Routes>
+      <LanguageProvider>
+        <AuthProvider>
+          <div className="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Landing />} />
               <Route path="home" element={<Home />} />
@@ -41,7 +43,8 @@ function App() {
             <Route path="/vendor" element={<VendorDashboard />} />
           </Routes>
         </div>
-      </AuthProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </Router>
   )
 }

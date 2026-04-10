@@ -1,0 +1,26 @@
+{
+  "en": {
+    "nav_home": "Intelligence Hub",
+    "nav_clinics": "Clinical Logs",
+    "nav_cart": "Cart",
+    "nav_admin": "Network Admin",
+    "nav_vendor": "Pharmacy Portal",
+    "nav_platform": "Platform",
+    "nav_auth": "Authentication",
+    "profile": "Profile",
+    "logout": "Logout",
+    "switch_lang": "हिंदी"
+  },
+  "hi": {
+    "nav_home": "इंटेलिजेंस हब",
+    "nav_clinics": "क्लिनिकल लॉग्स",
+    "nav_cart": "कार्ट",
+    "nav_admin": "नेटवर्क एडमिन",
+    "nav_vendor": "फार्मेसी पोर्टल",
+    "nav_platform": "प्लेटफार्म",
+    "nav_auth": "लॉग इन",
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉग आउट",
+    "switch_lang": "ENG"
+  }
+}
