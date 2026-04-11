@@ -114,7 +114,7 @@ function Navbar() {
                   className="w-8 h-8 rounded-lg border border-outline shadow-sm"
                 />
                 <div className="hidden lg:block text-left leading-tight">
-                  <p className="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">Active Member</p>
+                  <p className="text-[11px] font-black text-on-surface-variant uppercase tracking-widest">{t("active_member")}</p>
                   <p className="text-[13px] font-bold text-on-background line-clamp-1">{user.name}</p>
                 </div>
               </Link>
@@ -122,7 +122,7 @@ function Navbar() {
               <button
                 onClick={logout}
                 className="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
-                title="Secure Sign Out"
+                title={t("secure_sign_out")}
               >
                 <LogOut size={20} />
               </button>
@@ -133,7 +133,7 @@ function Navbar() {
                 to="/register"
                 className="bg-on-background text-white px-6 py-2.5 rounded-xl font-bold hover:shadow-xl hover:shadow-on-background/20 transition-all text-sm"
               >
-                Create Account
+                {t("create_account")}
               </Link>
             </div>
           )}
@@ -162,13 +162,13 @@ function Navbar() {
             {user ? (
               <>
                 <Link to="/home" className="flex items-center p-4 rounded-xl font-bold text-on-background hover:bg-surface-container" onClick={() => setMenuOpen(false)}>
-                  <span className="material-symbols-outlined mr-3">dashboard_customize</span> Intelligence Hub
+                  <span className="material-symbols-outlined mr-3">dashboard_customize</span> {t("nav_home")}
                 </Link>
                 <Link to="/prescriptions" className="flex items-center p-4 rounded-xl font-bold text-on-background hover:bg-surface-container" onClick={() => setMenuOpen(false)}>
-                  <span className="material-symbols-outlined mr-3">assignment_late</span> Clinical Logs
+                  <span className="material-symbols-outlined mr-3">assignment_late</span> {t("nav_clinics")}
                 </Link>
                 <Link to="/cart" className="flex items-center p-4 rounded-xl font-bold text-on-background hover:bg-surface-container" onClick={() => setMenuOpen(false)}>
-                  <span className="material-symbols-outlined mr-3">shopping_cart</span> Cart
+                  <span className="material-symbols-outlined mr-3">shopping_cart</span> {t("nav_cart")}
                 </Link>
                 <button
                   onClick={() => {
@@ -177,13 +177,13 @@ function Navbar() {
                   }}
                   className="w-full bg-error text-white p-4 rounded-xl font-bold mt-4"
                 >
-                  Secure Logout
+                  {t("secure_logout")}
                 </button>
               </>
             ) : (
               <>
-                <Link to="/" className="p-4 rounded-xl font-bold text-on-background" onClick={() => setMenuOpen(false)}>Platform</Link>
-                <Link to="/register" className="bg-primary text-white p-4 rounded-xl font-bold text-center" onClick={() => setMenuOpen(false)}>Get Started</Link>
+                <Link to="/" className="p-4 rounded-xl font-bold text-on-background" onClick={() => setMenuOpen(false)}>{t("nav_platform")}</Link>
+                <Link to="/register" className="bg-primary text-white p-4 rounded-xl font-bold text-center" onClick={() => setMenuOpen(false)}>{t("get_started")}</Link>
               </>
             )}
           </motion.div>

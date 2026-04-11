@@ -52,7 +52,7 @@ export default function OrdersTable({ orders = [], onStatusUpdate }) {
                                     {o.quantity}
                                 </td>
                                 <td className="py-2 px-2.5 border-b border-[#EEF5F1] text-[#1B7B3A] font-medium">
-                                    ₹{o.totalPrice}
+                                    ₹{Math.floor(o.totalPrice)},
                                 </td>
                                 <td className="py-2 px-2.5 border-b border-[#EEF5F1]">
                                     <span className={`inline-flex items-center py-0.5 px-2 rounded-[20px] text-[9px] font-medium ${badgeStyles[o.status] || badgeStyles.Pending}`}>
