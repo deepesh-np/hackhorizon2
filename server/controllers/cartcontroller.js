@@ -11,9 +11,6 @@ const enrichCartWithPrices = async (cart) => {
     }));
 };
 
-// @route   GET /api/cart
-// @desc    Get user's cart
-// @access  Private
 const getCart = async (req, res) => {
     try {
         const user = await User.findById(req.user._id)
@@ -28,9 +25,6 @@ const getCart = async (req, res) => {
     }
 };
 
-// @route   POST /api/cart
-// @desc    Add or update item in cart
-// @access  Private
 const addToCart = async (req, res) => {
     try {
         const { medicineId, vendorId, quantity = 1 } = req.body;
@@ -60,9 +54,6 @@ const addToCart = async (req, res) => {
     }
 };
 
-// @route   PUT /api/cart/:itemId
-// @desc    Update quantity of item in cart
-// @access  Private
 const updateQuantity = async (req, res) => {
     try {
         const { quantity } = req.body;
@@ -89,9 +80,6 @@ const updateQuantity = async (req, res) => {
     }
 };
 
-// @route   DELETE /api/cart/:itemId
-// @desc    Remove item from cart
-// @access  Private
 const removeFromCart = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);

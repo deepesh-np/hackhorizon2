@@ -183,9 +183,6 @@ const changePassword = async (req, res) => {
   }
 };
 
-// ─── @route   PUT /api/auth/update-profile ───────────────────────────────────
-// @desc    Update name, phone, profilePicture, vendorDetails
-// @access  Private
 const updateProfile = async (req, res) => {
   try {
     const allowedFields = ["name", "phone", "profilePicture"];

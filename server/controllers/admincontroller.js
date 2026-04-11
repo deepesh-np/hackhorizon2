@@ -1,8 +1,5 @@
 const User = require("../models/User");
 
-// ─── @route   GET /api/admin/users ───────────────────────────────────────────
-// @desc    Get all users (filterable by role)
-// @access  Admin only
 const getAllUsers = async (req, res) => {
   try {
     const { role, page = 1, limit = 20, search } = req.query;
@@ -38,9 +35,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// ─── @route   GET /api/admin/vendors/pending ─────────────────────────────────
-// @desc    Get all vendors pending verification
-// @access  Admin only
 const getPendingVendors = async (req, res) => {
   try {
     const vendors = await User.find({
@@ -54,9 +48,6 @@ const getPendingVendors = async (req, res) => {
   }
 };
 
-// ─── @route   PUT /api/admin/vendors/:id/verify ──────────────────────────────
-// @desc    Approve or reject a vendor
-// @access  Admin only
 const verifyVendor = async (req, res) => {
   try {
     const { approve } = req.body; // true = approve, false = reject
@@ -85,9 +76,6 @@ const verifyVendor = async (req, res) => {
   }
 };
 
-// ─── @route   PUT /api/admin/users/:id/toggle-status ────────────────────────
-// @desc    Activate or deactivate any user account
-// @access  Admin only
 const toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -115,9 +103,6 @@ const toggleUserStatus = async (req, res) => {
   }
 };
 
-// ─── @route   DELETE /api/admin/users/:id ────────────────────────────────────
-// @desc    Delete a user (hard delete)
-// @access  Admin only
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

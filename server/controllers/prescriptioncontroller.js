@@ -1,6 +1,7 @@
 const { callGroqWithFallback, visionModels, textModels } = require("../utils/groqClient");
 const Prescription = require("../models/Prescription");
 const Medicine = require("../models/Medicine");
+const { encrypt, decrypt } = require("../utils/cryptoUtil");
 
 // ─── @route   POST /api/prescriptions/scan ──────────────────────────────────
 // @desc    Upload a prescription image → AI extracts medicines → returns analysis
@@ -152,7 +153,7 @@ Rules:
     const prescription = await Prescription.create({
       user: req.user._id,
       originalImage: isBase64 ? "[base64_image]" : imageData, // Don't store large base64 in DB
-      extractedText: parsed.extractedText || "",
+      extractedText: encrypt(parsed.extractedText || ""),
       extractedMedicines: medicinesWithMatches.map((m) => ({
         name: m.name,
         dosage: m.dosage,
@@ -161,8 +162,16 @@ Rules:
         instructions: m.instructions,
         matchedMedicine: m.matchedMedicine,
       })),
-      doctorInfo: parsed.doctorInfo || {},
-      patientInfo: parsed.patientInfo || {},
+      doctorInfo: {
+        name: encrypt(parsed.doctorInfo?.name),
+        registrationNumber: encrypt(parsed.doctorInfo?.registrationNumber),
+        hospital: encrypt(parsed.doctorInfo?.hospital)
+      },
+      patientInfo: {
+        name: encrypt(parsed.patientInfo?.name),
+        age: encrypt(parsed.patientInfo?.age),
+        diagnosis: encrypt(parsed.patientInfo?.diagnosis)
+      },
       status: medicinesWithMatches.length > 0 ? "completed" : "partial",
       processingTime,
     });
@@ -319,9 +328,6 @@ Return ONLY valid JSON:
   }
 };
 
-// ─── @route   GET /api/prescriptions/history ────────────────────────────────
-// @desc    Get the logged-in user's prescription scan history
-// @access  Private
 const getPrescriptionHistory = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -336,13 +342,29 @@ const getPrescriptionHistory = async (req, res) => {
       .sort({ createdAt: -1 })
       .select("-originalImage"); // Don't send large image data
 
+    const decryptedPrescriptions = prescriptions.map(p => {
+      const obj = p.toObject();
+      if (obj.extractedText) obj.extractedText = decrypt(obj.extractedText);
+      if (obj.doctorInfo) {
+        if (obj.doctorInfo.name) obj.doctorInfo.name = decrypt(obj.doctorInfo.name);
+        if (obj.doctorInfo.registrationNumber) obj.doctorInfo.registrationNumber = decrypt(obj.doctorInfo.registrationNumber);
+        if (obj.doctorInfo.hospital) obj.doctorInfo.hospital = decrypt(obj.doctorInfo.hospital);
+      }
+      if (obj.patientInfo) {
+        if (obj.patientInfo.name) obj.patientInfo.name = decrypt(obj.patientInfo.name);
+        if (obj.patientInfo.age) obj.patientInfo.age = decrypt(obj.patientInfo.age);
+        if (obj.patientInfo.diagnosis) obj.patientInfo.diagnosis = decrypt(obj.patientInfo.diagnosis);
+      }
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      count: prescriptions.length,
+      count: decryptedPrescriptions.length,
       total,
       totalPages: Math.ceil(total / parseInt(limit)),
       currentPage: parseInt(page),
-      prescriptions,
+      prescriptions: decryptedPrescriptions,
     });
   } catch (error) {
     console.error("GetPrescriptionHistory error:", error);
@@ -350,9 +372,6 @@ const getPrescriptionHistory = async (req, res) => {
   }
 };
 
-// ─── @route   GET /api/prescriptions/:id ────────────────────────────────────
-// @desc    Get a specific prescription scan result
-// @access  Private (owner only)
 const getPrescriptionById = async (req, res) => {
   try {
     const prescription = await Prescription.findOne({
@@ -370,9 +389,22 @@ const getPrescriptionById = async (req, res) => {
       });
     }
 
+    const obj = prescription.toObject();
+    if (obj.extractedText) obj.extractedText = decrypt(obj.extractedText);
+    if (obj.doctorInfo) {
+      if (obj.doctorInfo.name) obj.doctorInfo.name = decrypt(obj.doctorInfo.name);
+      if (obj.doctorInfo.registrationNumber) obj.doctorInfo.registrationNumber = decrypt(obj.doctorInfo.registrationNumber);
+      if (obj.doctorInfo.hospital) obj.doctorInfo.hospital = decrypt(obj.doctorInfo.hospital);
+    }
+    if (obj.patientInfo) {
+      if (obj.patientInfo.name) obj.patientInfo.name = decrypt(obj.patientInfo.name);
+      if (obj.patientInfo.age) obj.patientInfo.age = decrypt(obj.patientInfo.age);
+      if (obj.patientInfo.diagnosis) obj.patientInfo.diagnosis = decrypt(obj.patientInfo.diagnosis);
+    }
+
     res.status(200).json({
       success: true,
-      prescription,
+      prescription: obj,
     });
   } catch (error) {
     console.error("GetPrescriptionById error:", error);

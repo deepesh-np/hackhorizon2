@@ -5,9 +5,6 @@ const { callGroqWithFallback, textModels } = require("../utils/groqClient");
 
 const SCRAPPER_URL = process.env.SCRAPPER_URL || "http://localhost:8000";
 
-// ─── @route   GET /api/medicines/search ─────────────────────────────────────
-// @desc    Search medicines by name, generic name, or active ingredient
-// @access  Public
 const searchMedicines = async (req, res) => {
   try {
     const { q, category, dosageForm, page = 1, limit = 20 } = req.query;
@@ -78,9 +75,6 @@ const searchMedicines = async (req, res) => {
   }
 };
 
-// ─── @route   GET /api/medicines/:id ────────────────────────────────────────
-// @desc    Get full medicine details with structured analysis
-// @access  Public
 const getMedicineById = async (req, res) => {
   try {
     const medicine = await Medicine.findById(req.params.id)
@@ -165,7 +159,6 @@ Rules:
       console.warn("AI alternatives lookup failed, falling back to database:", aiError.message);
     }
 
-    // ── Fetch DB alternatives (always — this is the fallback baseline) ──
     const ingredientNames = medicine.activeIngredients?.map((i) => i.name) || [];
 
     const dbAlternatives = await Medicine.find({
@@ -184,14 +177,12 @@ Rules:
       .select("name genericName brand manufacturer dosageForm averagePrice isBranded packSize regulatoryApproval activeIngredients")
       .sort({ isBranded: 1, averagePrice: 1 });
 
-    // ── Save AI suggestions to DB & merge ──
     const dbNames = new Set(dbAlternatives.map((d) => d.name.toLowerCase()));
     const validCategories = ["Antibiotic","Antifungal","Antiviral","Analgesic","Antipyretic","Antihypertensive","Antidiabetic","Antidepressant","Antihistamine","Antacid","Cardiovascular","Respiratory","Gastrointestinal","Neurological","Hormonal","Vitamin/Supplement","Other"];
     const validForms = ["Tablet","Capsule","Syrup","Injection","Cream","Drops","Inhaler","Patch","Gel","Ointment","Powder","Suspension","Other"];
 
     const newAiAlts = aiAlternativeNames.filter((ai) => ai.name && !dbNames.has(ai.name.toLowerCase()));
 
-    // Save AI alternatives to DB so they get _id and become clickable
     const savedAiIds = [];
     for (const ai of newAiAlts) {
       try {
@@ -225,14 +216,12 @@ Rules:
       }
     }
 
-    // Re-fetch saved AI alternatives from DB so they have full schema + _id
     let aiDbAlternatives = [];
     if (savedAiIds.length > 0) {
       aiDbAlternatives = await Medicine.find({ _id: { $in: savedAiIds } })
         .select("name genericName brand manufacturer dosageForm averagePrice isBranded packSize regulatoryApproval activeIngredients description sideEffects");
     }
 
-    // Enrich AI-from-DB alternatives with availability
     const enrichedAi = await Promise.all(
       aiDbAlternatives.map(async (alt) => {
         const cheapest = await Inventory.findOne({ medicine: alt._id, inStock: true })
@@ -321,9 +310,6 @@ Rules:
   }
 };
 
-// ─── @route   GET /api/medicines/:id/alternatives ───────────────────────────
-// @desc    Get generic alternatives & cheaper branded equivalents
-// @access  Public
 const getAlternatives = async (req, res) => {
   try {
     const medicine = await Medicine.findById(req.params.id);
@@ -331,9 +317,6 @@ const getAlternatives = async (req, res) => {
       return res.status(404).json({ success: false, message: "Medicine not found." });
     }
 
-    // Strategy 1: Use the equivalentMedicines field (manually curated)
-    // Strategy 2: Find same genericName medicines (automatic matching)
-    // Strategy 3: Find medicines with same activeIngredients
 
     const ingredientNames = medicine.activeIngredients.map((i) => i.name);
 
@@ -468,9 +451,6 @@ const getPriceComparison = async (req, res) => {
   }
 };
 
-// ─── @route   GET /api/medicines/:id/pharmacies ─────────────────────────────
-// @desc    Find nearby pharmacies stocking this medicine
-// @access  Public
 const getNearbyPharmacies = async (req, res) => {
   try {
     const { lat, lng, radius = 10 } = req.query; // radius in km
