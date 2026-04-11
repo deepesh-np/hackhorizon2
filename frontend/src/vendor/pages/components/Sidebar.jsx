@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ user, activeView, onViewChange, onAddMedicine, pendingOrders, onLogout }) {
+export default function Sidebar({ user, activeView, onViewChange, onAddMedicine, onBulkUpload, pendingOrders, onLogout }) {
     const navigate = useNavigate();
     const pharmacyName = user?.vendorDetails?.pharmacyName || user?.name || 'My Pharmacy';
     const initials = pharmacyName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -31,6 +31,15 @@ export default function Sidebar({ user, activeView, onViewChange, onAddMedicine,
             icon: (
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-[15px] h-[15px] shrink-0">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                </svg>
+            ),
+        },
+        {
+            label: 'Bulk Upload',
+            onClick: onBulkUpload,
+            icon: (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-[15px] h-[15px] shrink-0">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
                 </svg>
             ),
         },

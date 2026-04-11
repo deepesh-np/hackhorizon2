@@ -335,4 +335,114 @@ const getPriceInsight = async (req, res) => {
   }
 };
 
-module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory, getVendorStats, getVendorDemand, getPriceInsight };
+// Bulk add multiple inventory items at once from CSV/spreadsheet data
+const bulkAddToInventory = async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body must contain a non-empty 'items' array.",
+      });
+    }
+
+    if (items.length > 200) {
+      return res.status(400).json({
+        success: false,
+        message: "Maximum 200 items per bulk upload.",
+      });
+    }
+
+    const results = [];
+    let successCount = 0;
+    let failCount = 0;
+    let skipCount = 0;
+
+    for (let i = 0; i < items.length; i++) {
+      const row = items[i];
+      const rowIndex = i + 1;
+
+      try {
+        const { medicineName, price, mrp, discount, stock, batchNumber, expiryDate } = row;
+
+        if (!medicineName || price === undefined || price === null || price === '') {
+          results.push({ row: rowIndex, status: 'failed', medicineName: medicineName || '(empty)', reason: 'Missing required fields: medicineName and price' });
+          failCount++;
+          continue;
+        }
+
+        const parsedPrice = parseFloat(price);
+        if (isNaN(parsedPrice) || parsedPrice < 0) {
+          results.push({ row: rowIndex, status: 'failed', medicineName, reason: 'Invalid price value' });
+          failCount++;
+          continue;
+        }
+
+        // Fuzzy match medicine by name (case-insensitive)
+        const searchRegex = new RegExp(`^${medicineName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+        let medicine = await Medicine.findOne({ name: searchRegex, isActive: true });
+
+        // If exact match fails, try partial match
+        if (!medicine) {
+          const partialRegex = new RegExp(medicineName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          medicine = await Medicine.findOne({ name: partialRegex, isActive: true });
+        }
+
+        if (!medicine) {
+          results.push({ row: rowIndex, status: 'failed', medicineName, reason: 'Medicine not found in catalog' });
+          failCount++;
+          continue;
+        }
+
+        // Check for existing inventory entry
+        const existing = await Inventory.findOne({
+          vendor: req.user._id,
+          medicine: medicine._id,
+        });
+
+        if (existing) {
+          results.push({ row: rowIndex, status: 'skipped', medicineName: medicine.name, reason: 'Already in your inventory (use edit to update)' });
+          skipCount++;
+          continue;
+        }
+
+        const parsedStock = parseInt(stock) || 0;
+        const parsedMrp = mrp ? parseFloat(mrp) : null;
+        const parsedDiscount = discount ? parseFloat(discount) : 0;
+
+        await Inventory.create({
+          vendor: req.user._id,
+          medicine: medicine._id,
+          price: parsedPrice,
+          mrp: parsedMrp,
+          discount: parsedDiscount,
+          stock: parsedStock,
+          inStock: parsedStock > 0,
+          expiryDate: expiryDate ? new Date(expiryDate) : null,
+          batchNumber: batchNumber || null,
+        });
+
+        await updateAveragePrice(medicine._id);
+        results.push({ row: rowIndex, status: 'success', medicineName: medicine.name, reason: `Added at ₹${parsedPrice}` });
+        successCount++;
+
+      } catch (rowErr) {
+        results.push({ row: rowIndex, status: 'failed', medicineName: row.medicineName || '(unknown)', reason: rowErr.message || 'Unexpected error' });
+        failCount++;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Bulk upload complete: ${successCount} added, ${skipCount} skipped, ${failCount} failed.`,
+      summary: { total: items.length, successCount, skipCount, failCount },
+      results,
+    });
+  } catch (error) {
+    console.error("BulkAddToInventory error:", error);
+    res.status(500).json({ success: false, message: "Bulk upload failed." });
+  }
+};
+
+module.exports = { getMyInventory, addToInventory, updateInventory, removeFromInventory, getVendorStats, getVendorDemand, getPriceInsight, bulkAddToInventory };

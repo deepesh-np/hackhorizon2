@@ -116,6 +116,12 @@ const PharmacyMap = ({ pharmacies, userLocation }) => {
                             <span>Price: ₹{pharmacy.price || '--'}</span>
                             {pharmacy.distance && <span className="text-secondary">{pharmacy.distance} km</span>}
                         </div>
+                        {pharmacy.distance && (
+                            <div className="mt-1 text-xs text-[#6b7c72] flex justify-between">
+                                <span>Travel cost (₹2/km)</span>
+                                <span className="font-semibold text-[#1a1a1a]">≈ ₹{Math.round(pharmacy.distance * 2)}</span>
+                            </div>
+                        )}
                         {userLocation && (
                             <button 
                                 onClick={() => setDestination([lat, lng])}

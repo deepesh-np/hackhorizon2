@@ -11,6 +11,7 @@ import OrdersTable from './components/OrdersTable';
 import DemandHeatmap from './components/DemandHeatmap';
 import AddMedicineModal from './components/AddMedicineModal';
 import EditMedicineModal from './components/EditMedicineModal';
+import BulkUploadModal from './components/BulkUploadModal';
 import api from '../../services/api';
 
 export default function VendorDashboard() {
@@ -18,6 +19,7 @@ export default function VendorDashboard() {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
   const [modalOpen, setModalOpen] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [editModal, setEditModal] = useState({ open: false, item: null });
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -100,15 +102,26 @@ export default function VendorDashboard() {
           <div className="flex flex-col gap-3.5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-[#1a1a1a]">Medicine Inventory</h2>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center gap-1.5 py-[7px] px-3.5 bg-[#1B7B3A] text-white rounded-lg text-xs font-medium cursor-pointer border-none hover:bg-[#145C2C] transition-colors"
-              >
-                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
-                </svg>
-                Add Medicine
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setBulkModalOpen(true)}
+                  className="flex items-center gap-1.5 py-[7px] px-3.5 border border-[#1B7B3A]/30 text-[#1B7B3A] rounded-lg text-xs font-medium cursor-pointer bg-white hover:bg-[#E8F5ED] transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 fill-[#1B7B3A]">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                  </svg>
+                  Bulk Upload
+                </button>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="flex items-center gap-1.5 py-[7px] px-3.5 bg-[#1B7B3A] text-white rounded-lg text-xs font-medium cursor-pointer border-none hover:bg-[#145C2C] transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                  </svg>
+                  Add Medicine
+                </button>
+              </div>
             </div>
             <InventoryTable
               refreshTrigger={refreshTrigger}
@@ -178,6 +191,7 @@ export default function VendorDashboard() {
         activeView={activeView}
         onViewChange={setActiveView}
         onAddMedicine={() => setModalOpen(true)}
+        onBulkUpload={() => setBulkModalOpen(true)}
         pendingOrders={orders.filter(o => o.status === 'Pending').length}
         onLogout={handleLogout}
       />
@@ -206,6 +220,16 @@ export default function VendorDashboard() {
           onClose={() => setEditModal({ open: false, item: null })}
           onSuccess={() => {
             setEditModal({ open: false, item: null });
+            triggerRefresh();
+          }}
+        />
+      )}
+
+      {bulkModalOpen && (
+        <BulkUploadModal
+          onClose={() => setBulkModalOpen(false)}
+          onSuccess={() => {
+            setBulkModalOpen(false);
             triggerRefresh();
           }}
         />

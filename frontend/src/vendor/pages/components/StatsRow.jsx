@@ -46,7 +46,7 @@ export default function StatsRow({ stats }) {
         },
         {
             label: 'Revenue today',
-            value: `₹${stats?.revenueToday || 0}`,
+            value: `₹${Math.round(stats?.revenueToday || 0)}`,
             trend: '...',
             trendUp: true,
             iconBg: 'bg-[#D5F5E3]',
